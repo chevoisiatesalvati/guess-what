@@ -38,7 +38,8 @@ export const useContract = () => {
       topWord: string,
       middleWord: string,
       bottomWord: string,
-      entryFee: string
+      entryFee: string,
+      initialPrizePool: string
     ): Promise<number> => {
       setIsLoading(true);
       setError(null);
@@ -48,7 +49,8 @@ export const useContract = () => {
           topWord,
           middleWord,
           bottomWord,
-          entryFee
+          entryFee,
+          initialPrizePool
         );
         return gameId;
       } catch (err: any) {
@@ -179,6 +181,97 @@ export const useContract = () => {
     }
   }, []);
 
+  const getRandomActiveGame = useCallback(async (): Promise<number> => {
+    try {
+      return await contractService.getRandomActiveGame();
+    } catch (err: any) {
+      setError(err.message || 'Failed to get random game');
+      throw err;
+    }
+  }, []);
+
+  const getActiveGamesCount = useCallback(async (): Promise<number> => {
+    try {
+      return await contractService.getActiveGamesCount();
+    } catch (err: any) {
+      setError(err.message || 'Failed to get active games count');
+      return 0;
+    }
+  }, []);
+
+  const isOwner = useCallback(async (address: string): Promise<boolean> => {
+    try {
+      return await contractService.isOwner(address);
+    } catch (err: any) {
+      setError(err.message || 'Failed to check ownership');
+      return false;
+    }
+  }, []);
+
+  const getOwner = useCallback(async (): Promise<string> => {
+    try {
+      return await contractService.getOwner();
+    } catch (err: any) {
+      setError(err.message || 'Failed to get owner');
+      throw err;
+    }
+  }, []);
+
+  const isAdmin = useCallback(async (address: string): Promise<boolean> => {
+    try {
+      return await contractService.isAdmin(address);
+    } catch (err: any) {
+      setError(err.message || 'Failed to check admin status');
+      return false;
+    }
+  }, []);
+
+  const addAdmin = useCallback(async (adminAddress: string): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await contractService.addAdmin(adminAddress);
+    } catch (err: any) {
+      setError(err.message || 'Failed to add admin');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const removeAdmin = useCallback(async (adminAddress: string): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await contractService.removeAdmin(adminAddress);
+    } catch (err: any) {
+      setError(err.message || 'Failed to remove admin');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const getAdminList = useCallback(async (): Promise<string[]> => {
+    try {
+      return await contractService.getAdminList();
+    } catch (err: any) {
+      setError(err.message || 'Failed to get admin list');
+      return [];
+    }
+  }, []);
+
+  const getAdminCount = useCallback(async (): Promise<number> => {
+    try {
+      return await contractService.getAdminCount();
+    } catch (err: any) {
+      setError(err.message || 'Failed to get admin count');
+      return 0;
+    }
+  }, []);
+
   return {
     isConnected,
     isLoading,
@@ -193,5 +286,14 @@ export const useContract = () => {
     switchToBaseNetwork,
     getNextGameId,
     isGameAvailable,
+    getRandomActiveGame,
+    getActiveGamesCount,
+    isOwner,
+    getOwner,
+    isAdmin,
+    addAdmin,
+    removeAdmin,
+    getAdminList,
+    getAdminCount,
   };
 };

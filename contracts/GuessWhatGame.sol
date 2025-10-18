@@ -12,6 +12,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         string bottomWord;
         uint256 entryFee;
         uint256 totalPrize;
+        uint256 initialPrizePool; // Admin-assigned initial prize pool
         uint256 timeLimit;
         uint256 startTime;
         bool isActive;
@@ -39,6 +40,10 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     mapping(address => PlayerStats) public playerStats;
     mapping(address => uint256[]) public playerGames;
     
+    // Admin management
+    mapping(address => bool) public admins;
+    address[] public adminList;
+    
     // Events
     event GameCreated(uint256 indexed gameId, uint256 entryFee, uint256 timeLimit);
     event PlayerJoined(uint256 indexed gameId, address indexed player, uint256 entryFee);
@@ -46,9 +51,20 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     event GameWon(uint256 indexed gameId, address indexed winner, uint256 prize);
     event GameExpired(uint256 indexed gameId, uint256 totalPrize);
     event PrizeClaimed(uint256 indexed gameId, address indexed winner, uint256 amount);
+    event AdminAdded(address indexed admin);
+    event AdminRemoved(address indexed admin);
 
     // Constructor
-    constructor(address initialOwner) Ownable(initialOwner) {}
+    constructor(address initialOwner, address[] memory initialAdmins) Ownable(initialOwner) {
+        // Add initial admins
+        for (uint256 i = 0; i < initialAdmins.length; i++) {
+            if (initialAdmins[i] != address(0)) {
+                admins[initialAdmins[i]] = true;
+                adminList.push(initialAdmins[i]);
+                emit AdminAdded(initialAdmins[i]);
+            }
+        }
+    }
 
     // Modifiers
     modifier gameExists(uint256 _gameId) {
@@ -69,14 +85,21 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         _;
     }
 
+    modifier onlyAdmin() {
+        require(admins[msg.sender] || msg.sender == owner(), "Only admin or owner");
+        _;
+    }
+
     // Functions
     function createGame(
         string memory _topWord,
         string memory _middleWord,
         string memory _bottomWord,
-        uint256 _entryFee
-    ) external onlyOwner returns (uint256) {
+        uint256 _entryFee,
+        uint256 _initialPrizePool
+    ) external onlyAdmin payable returns (uint256) {
         require(_entryFee >= MIN_ENTRY_FEE && _entryFee <= MAX_ENTRY_FEE, "Invalid entry fee");
+        require(msg.value >= _initialPrizePool, "Insufficient funds for prize pool");
         
         uint256 gameId = nextGameId++;
         Game storage game = games[gameId];
@@ -86,7 +109,8 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         game.middleWord = _middleWord;
         game.bottomWord = _bottomWord;
         game.entryFee = _entryFee;
-        game.totalPrize = 0;
+        game.initialPrizePool = _initialPrizePool;
+        game.totalPrize = _initialPrizePool; // Start with admin's prize pool
         game.timeLimit = defaultTimeLimit;
         game.startTime = block.timestamp;
         game.isActive = true;
@@ -174,6 +198,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         string memory bottomWord,
         uint256 entryFee,
         uint256 totalPrize,
+        uint256 initialPrizePool,
         uint256 timeLimit,
         uint256 startTime,
         bool isActive,
@@ -188,6 +213,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
             game.bottomWord,
             game.entryFee,
             game.totalPrize,
+            game.initialPrizePool,
             game.timeLimit,
             game.startTime,
             game.isActive,
@@ -225,6 +251,81 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
 
     function getPlayerGuess(uint256 _gameId, address _player) external view gameExists(_gameId) returns (string memory) {
         return games[_gameId].playerGuesses[_player];
+    }
+
+    function getRandomActiveGame() external view returns (uint256) {
+        require(nextGameId > 1, "No games exist");
+        
+        // Get all active games
+        uint256[] memory activeGames = new uint256[](nextGameId - 1);
+        uint256 activeCount = 0;
+        
+        for (uint256 i = 1; i < nextGameId; i++) {
+            if (games[i].isActive && !games[i].isCompleted) {
+                activeGames[activeCount] = i;
+                activeCount++;
+            }
+        }
+        
+        require(activeCount > 0, "No active games available");
+        
+        // Use block timestamp as seed for randomness
+        uint256 randomIndex = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender))) % activeCount;
+        return activeGames[randomIndex];
+    }
+
+    function getActiveGamesCount() external view returns (uint256) {
+        uint256 count = 0;
+        for (uint256 i = 1; i < nextGameId; i++) {
+            if (games[i].isActive && !games[i].isCompleted) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    function isOwner(address _address) external view returns (bool) {
+        return _address == owner();
+    }
+
+    // Admin management functions
+    function addAdmin(address _admin) external onlyOwner {
+        require(_admin != address(0), "Invalid address");
+        require(!admins[_admin], "Already an admin");
+        
+        admins[_admin] = true;
+        adminList.push(_admin);
+        emit AdminAdded(_admin);
+    }
+
+    function removeAdmin(address _admin) external onlyOwner {
+        require(admins[_admin], "Not an admin");
+        require(_admin != owner(), "Cannot remove owner");
+        
+        admins[_admin] = false;
+        
+        // Remove from adminList
+        for (uint256 i = 0; i < adminList.length; i++) {
+            if (adminList[i] == _admin) {
+                adminList[i] = adminList[adminList.length - 1];
+                adminList.pop();
+                break;
+            }
+        }
+        
+        emit AdminRemoved(_admin);
+    }
+
+    function isAdmin(address _address) external view returns (bool) {
+        return admins[_address] || _address == owner();
+    }
+
+    function getAdminList() external view returns (address[] memory) {
+        return adminList;
+    }
+
+    function getAdminCount() external view returns (uint256) {
+        return adminList.length;
     }
 
     // Emergency functions

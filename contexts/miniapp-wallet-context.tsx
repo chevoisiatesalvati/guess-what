@@ -6,7 +6,7 @@ import { baseSepolia } from 'wagmi/chains';
 export const config = createConfig({
   chains: [baseSepolia],
   transports: {
-    [baseSepolia.id]: http(),
+    [baseSepolia.id]: http("https://base-sepolia.drpc.org"),
   },
   connectors: [miniAppConnector()],
 });

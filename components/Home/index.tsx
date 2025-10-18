@@ -3,11 +3,17 @@
 import { useUser } from '@/contexts/user-context';
 import Image from 'next/image';
 import { useAccount } from 'wagmi';
+import { useRouter } from 'next/navigation';
+import { useContract } from '@/hooks/use-contract';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
   const { user, isLoading, error, signIn } = useUser();
-
   const { address } = useAccount();
+  const router = useRouter();
+  const { isAdmin: checkIsAdmin } = useContract();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
 
   // Use real user data from context
   const currentUser = user || {
@@ -35,6 +41,43 @@ export default function Home() {
   console.log('Home component - user data:', user);
   console.log('Home component - isLoading:', isLoading);
   console.log('Home component - error:', error);
+
+  // Navigation handlers
+  const handleStartGame = () => {
+    router.push('/game');
+  };
+
+  const handleViewLeaderboard = () => {
+    router.push('/leaderboard');
+  };
+
+  const handleGameRules = () => {
+    // For now, just show an alert. Later this could be a modal or separate page
+    alert('Game Rules:\n\n1. You will see three words: top, middle (hidden), and bottom\n2. Guess the middle word that connects the top and bottom words\n3. You have 30 seconds to make your guess\n4. Pay the entry fee to play\n5. Win the prize pool if you guess correctly!');
+  };
+
+  // Check if user is admin (dynamic check from contract)
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (address) {
+        setCheckingAdmin(true);
+        try {
+          const adminStatus = await checkIsAdmin(address);
+          setIsAdmin(adminStatus);
+          console.log('👑 Admin status:', adminStatus);
+        } catch (error) {
+          console.error('❌ Error checking admin status:', error);
+          setIsAdmin(false);
+        } finally {
+          setCheckingAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [address, checkIsAdmin]);
 
   // Show login screen if user is not authenticated
   if (!user?.data && !isLoading) {
@@ -124,11 +167,10 @@ export default function Home() {
       <main className="max-w-4xl mx-auto p-6">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Welcome to Guess What?
+            Guess What?
           </h2>
           <p className="text-lg text-gray-600 mb-6">
-            Test your word association skills! Can you guess the word that
-            connects the other two?
+            You are in the right place for becoming a genius!
           </p>
         </div>
 
@@ -150,18 +192,46 @@ export default function Home() {
 
         {/* Game Actions */}
         <div className="space-y-4">
-          <button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+          <button 
+            onClick={handleStartGame}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+          >
             Start New Game
           </button>
 
           <div className="grid grid-cols-2 gap-4">
-            <button className="bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors">
+            <button 
+              onClick={handleViewLeaderboard}
+              className="bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+            >
               View Leaderboard
             </button>
-            <button className="bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors">
+            <button 
+              onClick={handleGameRules}
+              className="bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+            >
               Game Rules
             </button>
           </div>
+
+          {/* Admin Link */}
+          {checkingAdmin ? (
+            <div className="mt-4">
+              <div className="w-full bg-gray-100 text-gray-500 font-medium py-3 px-4 rounded-lg text-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500 mx-auto mb-2"></div>
+                Checking admin status...
+              </div>
+            </div>
+          ) : isAdmin ? (
+            <div className="mt-4">
+              <button 
+                onClick={() => router.push('/admin')}
+                className="w-full bg-red-600 text-white font-medium py-3 px-4 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                👑 Admin Panel
+              </button>
+            </div>
+          ) : null}
         </div>
 
         {/* Recent Games */}

@@ -14,12 +14,13 @@ export const GUESS_WHAT_GAME_ABI = [
   {
     name: 'createGame',
     type: 'function',
-    stateMutability: 'nonpayable',
+    stateMutability: 'payable',
     inputs: [
       { name: '_topWord', type: 'string' },
       { name: '_middleWord', type: 'string' },
       { name: '_bottomWord', type: 'string' },
-      { name: '_entryFee', type: 'uint256' }
+      { name: '_entryFee', type: 'uint256' },
+      { name: '_initialPrizePool', type: 'uint256' }
     ],
     outputs: [{ name: '', type: 'uint256' }]
   },
@@ -50,6 +51,8 @@ export const GUESS_WHAT_GAME_ABI = [
       { name: '', type: 'string' },
       { name: '', type: 'string' },
       { name: '', type: 'string' },
+      { name: '', type: 'uint256' },
+      { name: '', type: 'uint256' },
       { name: '', type: 'uint256' },
       { name: '', type: 'uint256' },
       { name: '', type: 'uint256' },
@@ -102,6 +105,76 @@ export const GUESS_WHAT_GAME_ABI = [
     outputs: [{ name: '', type: 'string' }]
   },
   {
+    name: 'getRandomActiveGame',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }]
+  },
+  {
+    name: 'getActiveGamesCount',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }]
+  },
+  {
+    name: 'nextGameId',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }]
+  },
+  {
+    name: 'isOwner',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: '_address', type: 'address' }],
+    outputs: [{ name: '', type: 'bool' }]
+  },
+  {
+    name: 'owner',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address' }]
+  },
+  {
+    name: 'isAdmin',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: '_address', type: 'address' }],
+    outputs: [{ name: '', type: 'bool' }]
+  },
+  {
+    name: 'addAdmin',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: '_admin', type: 'address' }],
+    outputs: []
+  },
+  {
+    name: 'removeAdmin',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: '_admin', type: 'address' }],
+    outputs: []
+  },
+  {
+    name: 'getAdminList',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address[]' }]
+  },
+  {
+    name: 'getAdminCount',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }]
+  },
+  {
     name: 'GameCreated',
     type: 'event',
     inputs: [
@@ -150,7 +223,7 @@ export const GUESS_WHAT_GAME_ABI = [
 // Contract addresses (to be updated after deployment)
 export const CONTRACT_ADDRESSES = {
   [base.id]: '0x0000000000000000000000000000000000000000', // Update after mainnet deployment
-  [baseSepolia.id]: '0x0F93b47fFd12B2af62Eacd26bB92fD75af297E37', // Deployed to Base Sepolia
+  [baseSepolia.id]: '0x1882A7180Dfb5DE4FA56ff4b766b0922bd1E694D', // Deployed to Base Sepolia with multi-admin support
 } as const;
 
 export class ContractService {
@@ -190,11 +263,13 @@ export class ContractService {
     topWord: string,
     middleWord: string,
     bottomWord: string,
-    entryFee: string
+    entryFee: string,
+    initialPrizePool: string
   ): Promise<number> {
     console.log('🏗️ Creating contract game...');
     console.log('📝 Words:', { topWord, middleWord, bottomWord });
     console.log('💰 Entry fee:', entryFee);
+    console.log('🏆 Initial prize pool:', initialPrizePool);
     console.log('📍 Contract address:', this.contractAddress);
     
     if (!this.contractAddress) {
@@ -205,14 +280,36 @@ export class ContractService {
 
     const walletClient = await this.getWalletClient();
     console.log('👛 Wallet client obtained');
+    console.log('Wallet client object:', walletClient);
     
     try {
       console.log('📤 Sending createGame transaction...');
+      
+      // Parse ETH values with high precision
+      const entryFeeWei = parseEther(entryFee);
+      const prizePoolWei = parseEther(initialPrizePool);
+      
+
+      // debug transaction values
+      console.log('💰 Transaction values:', {
+        entryFee: entryFee,
+        entryFeeWei: entryFeeWei.toString(),
+        initialPrizePool: initialPrizePool,
+        prizePoolWei: prizePoolWei.toString(),
+        value: prizePoolWei.toString(),
+        valueWei: prizePoolWei.toString(),
+        abi: GUESS_WHAT_GAME_ABI,
+        functionName: 'createGame',
+        args: [topWord, middleWord, bottomWord, entryFeeWei, prizePoolWei],
+        address: this.contractAddress,
+      });
+      
       const hash = await walletClient.writeContract({
         address: this.contractAddress,
         abi: GUESS_WHAT_GAME_ABI,
         functionName: 'createGame',
-        args: [topWord, middleWord, bottomWord, parseEther(entryFee)],
+        args: [topWord, middleWord, bottomWord, entryFeeWei, prizePoolWei],
+        value: prizePoolWei, // Send ETH for the prize pool
       });
       console.log('📋 Transaction hash:', hash);
 
@@ -348,11 +445,12 @@ export class ContractService {
       bottomWord: info[3],
       entryFee: formatEther(info[4]),
       totalPrize: formatEther(info[5]),
-      timeLimit: Number(info[6]),
-      startTime: Number(info[7]),
-      isActive: info[8],
-      isCompleted: info[9],
-      winner: info[10],
+      initialPrizePool: formatEther(info[6]),
+      timeLimit: Number(info[7]),
+      startTime: Number(info[8]),
+      isActive: info[9],
+      isCompleted: info[10],
+      winner: info[11],
     };
   }
 
@@ -464,6 +562,169 @@ export class ContractService {
       console.log(`❌ Game ${gameId} not available:`, error);
       return false;
     }
+  }
+
+  // Get a random active game
+  async getRandomActiveGame(): Promise<number> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    console.log('🎲 Getting random active game...');
+    const gameId = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'getRandomActiveGame'
+    });
+
+    console.log('🎮 Random game ID:', Number(gameId));
+    return Number(gameId);
+  }
+
+  // Get count of active games
+  async getActiveGamesCount(): Promise<number> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    console.log('📊 Getting active games count...');
+    const count = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'getActiveGamesCount'
+    });
+
+    console.log('📈 Active games count:', Number(count));
+    return Number(count);
+  }
+
+  // Check if an address is the contract owner
+  async isOwner(address: string): Promise<boolean> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    console.log('👑 Checking if address is owner...', address);
+    const isOwner = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'isOwner',
+      args: [address as Address]
+    });
+
+    console.log('👑 Is owner:', isOwner);
+    return isOwner;
+  }
+
+  // Get the contract owner address
+  async getOwner(): Promise<string> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    console.log('👑 Getting contract owner...');
+    const owner = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'owner'
+    });
+
+    console.log('👑 Contract owner:', owner);
+    return owner as string;
+  }
+
+  // Check if an address is an admin
+  async isAdmin(address: string): Promise<boolean> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    console.log('👑 Checking if address is admin...', address);
+    const isAdmin = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'isAdmin',
+      args: [address as Address]
+    });
+
+    console.log('👑 Is admin:', isAdmin);
+    return isAdmin;
+  }
+
+  // Add an admin (only owner can call)
+  async addAdmin(adminAddress: string): Promise<void> {
+    if (!this.contractAddress) {
+      throw new Error('Contract address not initialized');
+    }
+
+    const walletClient = await this.getWalletClient();
+    console.log('👑 Adding admin...', adminAddress);
+    
+    const hash = await walletClient.writeContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'addAdmin',
+      args: [adminAddress as Address]
+    });
+
+    console.log('📋 Transaction hash:', hash);
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    console.log('✅ Admin added successfully:', receipt);
+  }
+
+  // Remove an admin (only owner can call)
+  async removeAdmin(adminAddress: string): Promise<void> {
+    if (!this.contractAddress) {
+      throw new Error('Contract address not initialized');
+    }
+
+    const walletClient = await this.getWalletClient();
+    console.log('👑 Removing admin...', adminAddress);
+    
+    const hash = await walletClient.writeContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'removeAdmin',
+      args: [adminAddress as Address]
+    });
+
+    console.log('📋 Transaction hash:', hash);
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    console.log('✅ Admin removed successfully:', receipt);
+  }
+
+  // Get list of admins
+  async getAdminList(): Promise<string[]> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    console.log('👑 Getting admin list...');
+    const adminList = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'getAdminList'
+    });
+
+    console.log('👑 Admin list:', adminList);
+    return adminList as string[];
+  }
+
+  // Get admin count
+  async getAdminCount(): Promise<number> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    console.log('👑 Getting admin count...');
+    const count = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'getAdminCount'
+    });
+
+    console.log('👑 Admin count:', Number(count));
+    return Number(count);
   }
 }
 

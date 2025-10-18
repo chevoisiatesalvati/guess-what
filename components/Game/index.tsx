@@ -27,6 +27,8 @@ export default function Game() {
     switchToBaseNetwork,
     getNextGameId,
     isGameAvailable,
+    getRandomActiveGame,
+    getActiveGamesCount,
   } = useContract();
 
   const { address } = useAccount();
@@ -115,63 +117,75 @@ export default function Game() {
     console.log('📊 Contract loading:', contractLoading);
     
     try {
-      // Start the local game first
-      console.log('🎯 Creating local game...');
-      startNewGame(0.001); // 0.001 ETH entry fee
-      setGuess('');
-      setShowResult(false);
-
-      // If wallet is connected, try to find and join an existing game
+      // If wallet is connected, try to get a random active game
       if (isConnected) {
-        console.log('🔗 Wallet connected, looking for existing games...');
+        console.log('🔗 Wallet connected, looking for random active game...');
         
         try {
-          // Get the next game ID to see how many games exist
-          const nextGameId = await getNextGameId();
-          console.log('📊 Next game ID:', nextGameId);
+          // Check if there are any active games
+          const activeGamesCount = await getActiveGamesCount();
+          console.log('📊 Active games count:', activeGamesCount);
           
-          if (nextGameId > 1) {
-            // Check the most recent game (nextGameId - 1)
-            const latestGameId = nextGameId - 1;
-            console.log(`🔍 Checking game ${latestGameId}...`);
+          if (activeGamesCount > 0) {
+            // Get a random active game
+            const randomGameId = await getRandomActiveGame();
+            console.log(`🎲 Random game ID: ${randomGameId}`);
             
-            const isAvailable = await isGameAvailable(latestGameId);
-            if (isAvailable) {
-              console.log(`✅ Game ${latestGameId} is available, joining...`);
-              await joinContractGame(latestGameId, '0.001');
-              setContractGameId(latestGameId);
-              setResultMessage(`Joined game ${latestGameId}! Playing with real ETH prizes!`);
-              setShowResult(true);
-              setTimeout(() => setShowResult(false), 3000);
-            } else {
-              console.log(`❌ Game ${latestGameId} is not available`);
-              setResultMessage('No active games found. Game running locally only.');
-              setShowResult(true);
-              setTimeout(() => setShowResult(false), 3000);
-            }
-          } else {
-            console.log('❌ No games exist yet');
-            setResultMessage('No games available yet. Game running locally only.');
+            // Join the random game
+            console.log(`✅ Joining random game ${randomGameId}...`);
+            await joinContractGame(randomGameId, '0.001');
+            setContractGameId(randomGameId);
+            setResultMessage(`Joined random game ${randomGameId}! Playing with real ETH prizes!`);
             setShowResult(true);
             setTimeout(() => setShowResult(false), 3000);
+            
+            // Start local game with the contract game data
+            startNewGame(0.001);
+            setGuess('');
+            setShowResult(false);
+          } else {
+            console.log('❌ No active games available');
+            setResultMessage('No active games available. Game running locally only.');
+            setShowResult(true);
+            setTimeout(() => setShowResult(false), 3000);
+            
+            // Start local game anyway
+            startNewGame(0.001);
+            setGuess('');
+            setShowResult(false);
           }
         } catch (contractError: any) {
           console.error('❌ Contract operations failed:', contractError);
           setResultMessage(`Contract error: ${contractError.message}. Game running locally.`);
           setShowResult(true);
           setTimeout(() => setShowResult(false), 3000);
+          
+          // Start local game anyway
+          startNewGame(0.001);
+          setGuess('');
+          setShowResult(false);
         }
       } else {
         console.log('📱 No wallet connected, running local game only');
         setResultMessage('Game started locally! Connect wallet for blockchain features.');
         setShowResult(true);
         setTimeout(() => setShowResult(false), 3000);
+        
+        // Start local game
+        startNewGame(0.001);
+        setGuess('');
+        setShowResult(false);
       }
     } catch (error: any) {
       console.error('❌ Error starting game:', error);
       setResultMessage(`Error starting game: ${error.message}`);
       setShowResult(true);
       setTimeout(() => setShowResult(false), 3000);
+      
+      // Start local game anyway
+      startNewGame(0.001);
+      setGuess('');
+      setShowResult(false);
     }
   };
 

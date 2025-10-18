@@ -1,16 +1,25 @@
 import type { HardhatUserConfig } from "hardhat/config";
 
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
+import "@nomicfoundation/hardhat-verify";
 import { configVariable } from "hardhat/config";
 import "dotenv/config";
+import hardhatVerify from "@nomicfoundation/hardhat-verify";
 
 
 const config: HardhatUserConfig = {
-  plugins: [hardhatToolboxViemPlugin],
+  plugins: [hardhatToolboxViemPlugin, hardhatVerify],
   solidity: {
     profiles: {
       default: {
         version: "0.8.28",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+          viaIR: true,
+        },
       },
       production: {
         version: "0.8.28",
@@ -19,9 +28,18 @@ const config: HardhatUserConfig = {
             enabled: true,
             runs: 200,
           },
+          viaIR: true,
         },
       },
     },
+  },
+  verify: {
+    etherscan: {
+      apiKey: configVariable("BASESCAN_API_KEY"),
+    },
+    blockscout: {
+      enabled: true,
+    }
   },
   networks: {
     hardhatMainnet: {
