@@ -52,5 +52,8 @@ export async function getFarcasterManifest() {
       ogImageUrl: `${appUrl}/images/feed.png`, // 1200 x 630px (1.91:1), promotional image, same as app hero image
       noindex: noindex,
     },
+    baseBuilder: {
+      ownerAddress: '0xAF4dAc552438D63E49cdC4c640E2A5961c93d017',
+    },
   };
 }
