@@ -109,7 +109,7 @@ export const UserProvider = ({
       console.log('QuickAuth available');
       console.log('quickAuth', sdk.quickAuth);
 
-      // TODO: code stuck here... why is this not working?
+      // TODO: code stuck here on Base app... why is working on Farcaster but not on Base App?
       const result = await sdk.quickAuth.getToken();
 
       console.log('result', result);

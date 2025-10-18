@@ -1,5 +1,7 @@
 import { createPublicClient, http, parseEther, formatEther, decodeEventLog, type Address } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
+import { getWalletClient } from 'wagmi/actions';
+import { config } from '@/contexts/miniapp-wallet-context';
 
 export interface ContractConfig {
   address: string;
@@ -147,8 +149,8 @@ export const GUESS_WHAT_GAME_ABI = [
 
 // Contract addresses (to be updated after deployment)
 export const CONTRACT_ADDRESSES = {
-  [base.id]: '0x0000000000000000000000000000000000000000', // Update after deployment
-  [baseSepolia.id]: '0x0000000000000000000000000000000000000000', // Update after deployment
+  [base.id]: '0x0000000000000000000000000000000000000000', // Update after mainnet deployment
+  [baseSepolia.id]: '0x0F93b47fFd12B2af62Eacd26bB92fD75af297E37', // Deployed to Base Sepolia
 } as const;
 
 export class ContractService {
@@ -163,13 +165,21 @@ export class ContractService {
     if (typeof window !== 'undefined') {
       // Create public client for read operations
       this.publicClient = createPublicClient({
-        chain: base,
+        chain: baseSepolia,
         transport: http()
       });
 
       // Set contract address based on current chain
-      this.contractAddress = CONTRACT_ADDRESSES[base.id] as Address;
+      this.contractAddress = CONTRACT_ADDRESSES[baseSepolia.id] as Address;
     }
+  }
+
+  private async getWalletClient() {
+    const walletClient = await getWalletClient(config);
+    if (!walletClient) {
+      throw new Error('Wallet not connected');
+    }
+    return walletClient;
   }
 
   private getContractAddress(chainId: number): Address | null {
@@ -186,10 +196,46 @@ export class ContractService {
       throw new Error('Contract address not initialized');
     }
 
-    // For now, return a mock game ID
-    // In a real implementation, you would need to handle wallet connection
-    // and use a wallet client with proper account setup
-    throw new Error('Wallet connection required for write operations');
+    const walletClient = await this.getWalletClient();
+    
+    try {
+      const hash = await walletClient.writeContract({
+        address: this.contractAddress,
+        abi: GUESS_WHAT_GAME_ABI,
+        functionName: 'createGame',
+        args: [topWord, middleWord, bottomWord, parseEther(entryFee)],
+      });
+
+      // Wait for transaction to be mined
+      const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+      
+      // Parse the event to get the game ID
+      const event = receipt.logs.find((log: any) => {
+        try {
+          const decoded = decodeEventLog({
+            abi: GUESS_WHAT_GAME_ABI,
+            data: log.data,
+            topics: log.topics,
+          });
+          return decoded.eventName === 'GameCreated';
+        } catch {
+          return false;
+        }
+      });
+
+      if (event) {
+        const decoded = decodeEventLog({
+          abi: GUESS_WHAT_GAME_ABI,
+          data: event.data,
+          topics: event.topics,
+        });
+        return Number((decoded.args as any).gameId);
+      }
+
+      throw new Error('Game creation event not found');
+    } catch (error: any) {
+      throw new Error(`Failed to create game: ${error.message}`);
+    }
   }
 
   async joinGame(gameId: number, entryFee: string): Promise<void> {
@@ -197,8 +243,22 @@ export class ContractService {
       throw new Error('Contract address not initialized');
     }
 
-    // For now, throw error as wallet connection is required
-    throw new Error('Wallet connection required for write operations');
+    const walletClient = await this.getWalletClient();
+    
+    try {
+      const hash = await walletClient.writeContract({
+        address: this.contractAddress,
+        abi: GUESS_WHAT_GAME_ABI,
+        functionName: 'joinGame',
+        args: [BigInt(gameId)],
+        value: parseEther(entryFee),
+      });
+
+      // Wait for transaction to be mined
+      await this.publicClient.waitForTransactionReceipt({ hash });
+    } catch (error: any) {
+      throw new Error(`Failed to join game: ${error.message}`);
+    }
   }
 
   async submitGuess(gameId: number, guess: string): Promise<void> {
@@ -206,8 +266,21 @@ export class ContractService {
       throw new Error('Contract address not initialized');
     }
 
-    // For now, throw error as wallet connection is required
-    throw new Error('Wallet connection required for write operations');
+    const walletClient = await this.getWalletClient();
+    
+    try {
+      const hash = await walletClient.writeContract({
+        address: this.contractAddress,
+        abi: GUESS_WHAT_GAME_ABI,
+        functionName: 'submitGuess',
+        args: [BigInt(gameId), guess],
+      });
+
+      // Wait for transaction to be mined
+      await this.publicClient.waitForTransactionReceipt({ hash });
+    } catch (error: any) {
+      throw new Error(`Failed to submit guess: ${error.message}`);
+    }
   }
 
   async getGameInfo(gameId: number) {
@@ -300,6 +373,16 @@ export class ContractService {
       functionName: 'getPlayerGuess',
       args: [BigInt(gameId), playerAddress as Address]
     });
+  }
+
+  async switchToBaseNetwork(): Promise<void> {
+    const walletClient = await this.getWalletClient();
+    
+    try {
+      await walletClient.switchChain({ id: baseSepolia.id });
+    } catch (error: any) {
+      throw new Error(`Failed to switch to Base Sepolia network: ${error.message}`);
+    }
   }
 }
 

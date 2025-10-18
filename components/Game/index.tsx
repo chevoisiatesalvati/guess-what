@@ -83,23 +83,35 @@ export default function Game() {
 
   const handleStartGame = async () => {
     try {
-      // Create contract game if connected
-      if (isConnected && currentGame) {
-        const gameId = await createContractGame(
-          currentGame.words.top,
-          currentGame.words.middle,
-          currentGame.words.bottom,
-          '0.001'
-        );
-        setContractGameId(gameId);
-
-        // Join the game
-        await joinContractGame(gameId, '0.001');
-      }
-
+      // Start the local game first
       startNewGame(0.001); // 0.001 ETH entry fee
       setGuess('');
       setShowResult(false);
+
+      // Create contract game if connected (after local game is created)
+      if (isConnected) {
+        // We need to wait for the game context to update with the new game
+        // Use a small delay to ensure the game state is updated
+        setTimeout(async () => {
+          try {
+            const gameId = await createContractGame(
+              currentGame?.words.top || '',
+              currentGame?.words.middle || '',
+              currentGame?.words.bottom || '',
+              '0.001'
+            );
+            setContractGameId(gameId);
+
+            // Join the game
+            await joinContractGame(gameId, '0.001');
+          } catch (contractError: any) {
+            console.error('Contract game creation failed:', contractError);
+            setResultMessage(`Contract error: ${contractError.message}`);
+            setShowResult(true);
+            setTimeout(() => setShowResult(false), 3000);
+          }
+        }, 100);
+      }
     } catch (error: any) {
       setResultMessage(`Error starting game: ${error.message}`);
       setShowResult(true);
@@ -118,7 +130,7 @@ export default function Game() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Guess What?
             </h1>
-            <p className="text-gray-600">Test your word association skills!</p>
+            <p className="text-gray-600">Whaaaaaaaat?</p>
           </div>
 
           {/* Player Stats */}

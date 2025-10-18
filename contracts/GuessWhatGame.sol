@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract GuessWhatGame is ReentrancyGuard, Ownable {
@@ -32,7 +32,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     uint256 public nextGameId = 1;
     uint256 public constant MIN_ENTRY_FEE = 0.001 ether;
     uint256 public constant MAX_ENTRY_FEE = 0.1 ether;
-    uint256 public constant DEFAULT_TIME_LIMIT = 30; // 30 seconds
+    uint256 public defaultTimeLimit = 30; // 30 seconds (mutable)
     uint256 public constant PLATFORM_FEE_PERCENT = 5; // 5% platform fee
     
     mapping(uint256 => Game) public games;
@@ -46,6 +46,9 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     event GameWon(uint256 indexed gameId, address indexed winner, uint256 prize);
     event GameExpired(uint256 indexed gameId, uint256 totalPrize);
     event PrizeClaimed(uint256 indexed gameId, address indexed winner, uint256 amount);
+
+    // Constructor
+    constructor(address initialOwner) Ownable(initialOwner) {}
 
     // Modifiers
     modifier gameExists(uint256 _gameId) {
@@ -84,13 +87,13 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         game.bottomWord = _bottomWord;
         game.entryFee = _entryFee;
         game.totalPrize = 0;
-        game.timeLimit = DEFAULT_TIME_LIMIT;
+        game.timeLimit = defaultTimeLimit;
         game.startTime = block.timestamp;
         game.isActive = true;
         game.isCompleted = false;
         game.winner = address(0);
         
-        emit GameCreated(gameId, _entryFee, DEFAULT_TIME_LIMIT);
+        emit GameCreated(gameId, _entryFee, defaultTimeLimit);
         return gameId;
     }
 
@@ -231,6 +234,6 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
 
     function setTimeLimit(uint256 _newTimeLimit) external onlyOwner {
         require(_newTimeLimit >= 10 && _newTimeLimit <= 300, "Invalid time limit");
-        // This would need to be implemented to update existing games
+        defaultTimeLimit = _newTimeLimit;
     }
 }

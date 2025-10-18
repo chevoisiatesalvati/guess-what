@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "frames": "frames"
+    "frames": "frames",
+    "compile": "hardhat compile",
+    "deploy:base-sepolia": "hardhat ignition deploy ignition/modules/GuessWhatGame.ts --network baseSepolia",
+    "deploy:base": "hardhat ignition deploy ignition/modules/GuessWhatGame.ts --network base"
   },
   "dependencies": {
     "@farcaster/auth-client": "^0.7.0",
@@ -15,10 +18,12 @@
     "@farcaster/miniapp-sdk": "^0.1.1",
     "@farcaster/miniapp-wagmi-connector": "^1.0.0",
     "@frames.js/debugger": "^0.5.0",
+    "@openzeppelin/contracts": "^5.4.0",
     "@t3-oss/env-nextjs": "^0.12.0",
     "@tanstack/react-query": "^5.64.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "eruda": "^3.2.3",
     "jiti": "1.21.7",
     "jose": "^5.9.6",
@@ -29,18 +34,31 @@
     "react-dom": "^18",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
-    "viem": "^2.27.2",
+    "viem": "^2.30.0",
     "wagmi": "^2.14.12",
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@nomicfoundation/hardhat-ignition": "^3.0.0",
+    "@nomicfoundation/hardhat-ignition-viem": "^3.0.0",
+    "@nomicfoundation/hardhat-keystore": "^3.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^3.0.1",
+    "@nomicfoundation/hardhat-node-test-runner": "^3.0.0",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
+    "@nomicfoundation/hardhat-verify": "^3.0.3",
+    "@nomicfoundation/hardhat-viem": "^3.0.0",
+    "@nomicfoundation/hardhat-viem-assertions": "^3.0.0",
+    "@nomicfoundation/ignition-core": "^3.0.0",
+    "@types/node": "^22.8.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.6",
+    "forge-std": "foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.0.7",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
-  }
+    "typescript": "~5.8.0"
+  },
+  "type": "module"
 }
