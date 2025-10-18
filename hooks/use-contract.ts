@@ -161,6 +161,24 @@ export const useContract = () => {
     }
   }, []);
 
+  const getNextGameId = useCallback(async (): Promise<number> => {
+    try {
+      return await contractService.getNextGameId();
+    } catch (err: any) {
+      setError(err.message || 'Failed to get next game ID');
+      throw err;
+    }
+  }, []);
+
+  const isGameAvailable = useCallback(async (gameId: number): Promise<boolean> => {
+    try {
+      return await contractService.isGameAvailable(gameId);
+    } catch (err: any) {
+      setError(err.message || 'Failed to check game availability');
+      return false;
+    }
+  }, []);
+
   return {
     isConnected,
     isLoading,
@@ -173,5 +191,7 @@ export const useContract = () => {
     isPlayerInGame,
     hasPlayerGuessed,
     switchToBaseNetwork,
+    getNextGameId,
+    isGameAvailable,
   };
 };

@@ -192,24 +192,37 @@ export class ContractService {
     bottomWord: string,
     entryFee: string
   ): Promise<number> {
+    console.log('🏗️ Creating contract game...');
+    console.log('📝 Words:', { topWord, middleWord, bottomWord });
+    console.log('💰 Entry fee:', entryFee);
+    console.log('📍 Contract address:', this.contractAddress);
+    
     if (!this.contractAddress) {
-      throw new Error('Contract address not initialized');
+      const error = 'Contract address not initialized';
+      console.error('❌', error);
+      throw new Error(error);
     }
 
     const walletClient = await this.getWalletClient();
+    console.log('👛 Wallet client obtained');
     
     try {
+      console.log('📤 Sending createGame transaction...');
       const hash = await walletClient.writeContract({
         address: this.contractAddress,
         abi: GUESS_WHAT_GAME_ABI,
         functionName: 'createGame',
         args: [topWord, middleWord, bottomWord, parseEther(entryFee)],
       });
+      console.log('📋 Transaction hash:', hash);
 
       // Wait for transaction to be mined
+      console.log('⏳ Waiting for transaction confirmation...');
       const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+      console.log('✅ Transaction confirmed:', receipt);
       
       // Parse the event to get the game ID
+      console.log('🔍 Looking for GameCreated event...');
       const event = receipt.logs.find((log: any) => {
         try {
           const decoded = decodeEventLog({
@@ -229,23 +242,37 @@ export class ContractService {
           data: event.data,
           topics: event.topics,
         });
-        return Number((decoded.args as any).gameId);
+        const gameId = Number((decoded.args as any).gameId);
+        console.log('🎮 Game created with ID:', gameId);
+        return gameId;
       }
 
-      throw new Error('Game creation event not found');
+      const error = 'Game creation event not found';
+      console.error('❌', error);
+      throw new Error(error);
     } catch (error: any) {
+      console.error('❌ Contract game creation failed:', error);
       throw new Error(`Failed to create game: ${error.message}`);
     }
   }
 
   async joinGame(gameId: number, entryFee: string): Promise<void> {
+    console.log('🎯 Joining contract game...');
+    console.log('🆔 Game ID:', gameId);
+    console.log('💰 Entry fee:', entryFee);
+    console.log('📍 Contract address:', this.contractAddress);
+    
     if (!this.contractAddress) {
-      throw new Error('Contract address not initialized');
+      const error = 'Contract address not initialized';
+      console.error('❌', error);
+      throw new Error(error);
     }
 
     const walletClient = await this.getWalletClient();
+    console.log('👛 Wallet client obtained');
     
     try {
+      console.log('📤 Sending joinGame transaction...');
       const hash = await walletClient.writeContract({
         address: this.contractAddress,
         abi: GUESS_WHAT_GAME_ABI,
@@ -253,32 +280,51 @@ export class ContractService {
         args: [BigInt(gameId)],
         value: parseEther(entryFee),
       });
+      console.log('📋 Transaction hash:', hash);
 
       // Wait for transaction to be mined
-      await this.publicClient.waitForTransactionReceipt({ hash });
+      console.log('⏳ Waiting for transaction confirmation...');
+      const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+      console.log('✅ Transaction confirmed:', receipt);
+      console.log('🎉 Successfully joined game!');
     } catch (error: any) {
+      console.error('❌ Failed to join game:', error);
       throw new Error(`Failed to join game: ${error.message}`);
     }
   }
 
   async submitGuess(gameId: number, guess: string): Promise<void> {
+    console.log('🎯 Submitting guess to contract...');
+    console.log('🆔 Game ID:', gameId);
+    console.log('💭 Guess:', guess);
+    console.log('📍 Contract address:', this.contractAddress);
+    
     if (!this.contractAddress) {
-      throw new Error('Contract address not initialized');
+      const error = 'Contract address not initialized';
+      console.error('❌', error);
+      throw new Error(error);
     }
 
     const walletClient = await this.getWalletClient();
+    console.log('👛 Wallet client obtained');
     
     try {
+      console.log('📤 Sending submitGuess transaction...');
       const hash = await walletClient.writeContract({
         address: this.contractAddress,
         abi: GUESS_WHAT_GAME_ABI,
         functionName: 'submitGuess',
         args: [BigInt(gameId), guess],
       });
+      console.log('📋 Transaction hash:', hash);
 
       // Wait for transaction to be mined
-      await this.publicClient.waitForTransactionReceipt({ hash });
+      console.log('⏳ Waiting for transaction confirmation...');
+      const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+      console.log('✅ Transaction confirmed:', receipt);
+      console.log('🎉 Guess submitted successfully!');
     } catch (error: any) {
+      console.error('❌ Failed to submit guess:', error);
       throw new Error(`Failed to submit guess: ${error.message}`);
     }
   }
@@ -382,6 +428,41 @@ export class ContractService {
       await walletClient.switchChain({ id: baseSepolia.id });
     } catch (error: any) {
       throw new Error(`Failed to switch to Base Sepolia network: ${error.message}`);
+    }
+  }
+
+  // Get the next game ID to check if there are any games available
+  async getNextGameId(): Promise<number> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    console.log('🔍 Getting next game ID...');
+    const nextGameId = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'nextGameId'
+    });
+
+    console.log('📊 Next game ID:', Number(nextGameId));
+    return Number(nextGameId);
+  }
+
+  // Check if a game exists and is active
+  async isGameAvailable(gameId: number): Promise<boolean> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    try {
+      console.log(`🔍 Checking if game ${gameId} is available...`);
+      const gameInfo = await this.getGameInfo(gameId);
+      const isAvailable = gameInfo.isActive && !gameInfo.isCompleted;
+      console.log(`📊 Game ${gameId} available:`, isAvailable);
+      return isAvailable;
+    } catch (error) {
+      console.log(`❌ Game ${gameId} not available:`, error);
+      return false;
     }
   }
 }

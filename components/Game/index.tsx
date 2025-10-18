@@ -25,6 +25,8 @@ export default function Game() {
     joinGame: joinContractGame,
     submitGuess: submitContractGuess,
     switchToBaseNetwork,
+    getNextGameId,
+    isGameAvailable,
   } = useContract();
 
   const { address } = useAccount();
@@ -50,31 +52,57 @@ export default function Game() {
 
   const handleGuessSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!guess.trim() || !isPlaying) return;
+    console.log('🎯 Submitting guess:', guess);
+    console.log('🎮 Is playing:', isPlaying);
+    console.log('🔗 Is connected:', isConnected);
+    console.log('🆔 Contract game ID:', contractGameId);
+    
+    if (!guess.trim() || !isPlaying) {
+      console.log('❌ Invalid guess or not playing');
+      return;
+    }
 
     try {
-      // Submit to smart contract if connected
+      // Submit to smart contract if connected and has contract game ID
       if (isConnected && contractGameId) {
-        await submitContractGuess(contractGameId, guess);
+        console.log('📝 Submitting guess to contract...');
+        try {
+          await submitContractGuess(contractGameId, guess);
+          console.log('✅ Contract guess submitted successfully');
+        } catch (contractError: any) {
+          console.error('❌ Contract guess submission failed:', contractError);
+          setResultMessage(`Contract error: ${contractError.message}`);
+          setShowResult(true);
+          setTimeout(() => setShowResult(false), 3000);
+          return;
+        }
+      } else {
+        console.log('📱 No contract game, submitting locally only');
       }
 
+      console.log('🎯 Processing local guess...');
       const result = submitGuess(guess);
+      console.log('📊 Guess result:', result);
+      
       setResultMessage(result.message);
       setShowResult(true);
 
       if (result.success) {
+        console.log('🎉 Guess was correct!');
         setGuess('');
         setTimeout(() => {
           setShowResult(false);
           resetGame();
         }, 3000);
       } else {
+        console.log('❌ Guess was incorrect');
         setGuess('');
         setTimeout(() => {
           setShowResult(false);
         }, 2000);
       }
     } catch (error: any) {
+      console.error('❌ Error submitting guess:', error);
       setResultMessage(`Error: ${error.message}`);
       setShowResult(true);
       setTimeout(() => setShowResult(false), 3000);
@@ -82,37 +110,65 @@ export default function Game() {
   };
 
   const handleStartGame = async () => {
+    console.log('🎮 Starting new game...');
+    console.log('🔗 Wallet connected:', isConnected);
+    console.log('📊 Contract loading:', contractLoading);
+    
     try {
       // Start the local game first
+      console.log('🎯 Creating local game...');
       startNewGame(0.001); // 0.001 ETH entry fee
       setGuess('');
       setShowResult(false);
 
-      // Create contract game if connected (after local game is created)
+      // If wallet is connected, try to find and join an existing game
       if (isConnected) {
-        // We need to wait for the game context to update with the new game
-        // Use a small delay to ensure the game state is updated
-        setTimeout(async () => {
-          try {
-            const gameId = await createContractGame(
-              currentGame?.words.top || '',
-              currentGame?.words.middle || '',
-              currentGame?.words.bottom || '',
-              '0.001'
-            );
-            setContractGameId(gameId);
-
-            // Join the game
-            await joinContractGame(gameId, '0.001');
-          } catch (contractError: any) {
-            console.error('Contract game creation failed:', contractError);
-            setResultMessage(`Contract error: ${contractError.message}`);
+        console.log('🔗 Wallet connected, looking for existing games...');
+        
+        try {
+          // Get the next game ID to see how many games exist
+          const nextGameId = await getNextGameId();
+          console.log('📊 Next game ID:', nextGameId);
+          
+          if (nextGameId > 1) {
+            // Check the most recent game (nextGameId - 1)
+            const latestGameId = nextGameId - 1;
+            console.log(`🔍 Checking game ${latestGameId}...`);
+            
+            const isAvailable = await isGameAvailable(latestGameId);
+            if (isAvailable) {
+              console.log(`✅ Game ${latestGameId} is available, joining...`);
+              await joinContractGame(latestGameId, '0.001');
+              setContractGameId(latestGameId);
+              setResultMessage(`Joined game ${latestGameId}! Playing with real ETH prizes!`);
+              setShowResult(true);
+              setTimeout(() => setShowResult(false), 3000);
+            } else {
+              console.log(`❌ Game ${latestGameId} is not available`);
+              setResultMessage('No active games found. Game running locally only.');
+              setShowResult(true);
+              setTimeout(() => setShowResult(false), 3000);
+            }
+          } else {
+            console.log('❌ No games exist yet');
+            setResultMessage('No games available yet. Game running locally only.');
             setShowResult(true);
             setTimeout(() => setShowResult(false), 3000);
           }
-        }, 100);
+        } catch (contractError: any) {
+          console.error('❌ Contract operations failed:', contractError);
+          setResultMessage(`Contract error: ${contractError.message}. Game running locally.`);
+          setShowResult(true);
+          setTimeout(() => setShowResult(false), 3000);
+        }
+      } else {
+        console.log('📱 No wallet connected, running local game only');
+        setResultMessage('Game started locally! Connect wallet for blockchain features.');
+        setShowResult(true);
+        setTimeout(() => setShowResult(false), 3000);
       }
     } catch (error: any) {
+      console.error('❌ Error starting game:', error);
       setResultMessage(`Error starting game: ${error.message}`);
       setShowResult(true);
       setTimeout(() => setShowResult(false), 3000);
@@ -202,7 +258,7 @@ export default function Game() {
             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {contractLoading
-              ? 'Creating Game...'
+              ? 'Joining Game...'
               : 'Start New Game (0.001 ETH)'}
           </button>
 
