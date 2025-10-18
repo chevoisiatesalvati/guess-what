@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic';
 
-const GameComponent = dynamic(() => import('@/components/Game'), {
+const HomeComponent = dynamic(() => import('@/components/Home'), {
   ssr: false,
   loading: () => (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center">
@@ -9,6 +9,6 @@ const GameComponent = dynamic(() => import('@/components/Game'), {
   ),
 });
 
-export default function Home() {
-  return <GameComponent />;
+export default function HomePage() {
+  return <HomeComponent />;
 }
