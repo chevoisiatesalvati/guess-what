@@ -1,7 +1,7 @@
-import { farcasterFrame as miniAppConnector } from "@farcaster/miniapp-wagmi-connector";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createConfig, http, WagmiProvider } from "wagmi";
-import { base } from "wagmi/chains";
+import { farcasterFrame as miniAppConnector } from '@farcaster/miniapp-wagmi-connector';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createConfig, http, WagmiProvider } from 'wagmi';
+import { base } from 'wagmi/chains';
 
 export const config = createConfig({
   chains: [base],

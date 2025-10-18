@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useUser } from "@/contexts/user-context";
-import Image from "next/image";
-import { useAccount } from "wagmi";
+import { useUser } from '@/contexts/user-context';
+import Image from 'next/image';
+import { useAccount } from 'wagmi';
 
 export default function Home() {
   const { user, isLoading, error, signIn } = useUser();
@@ -14,14 +14,14 @@ export default function Home() {
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold">Welcome</h1>
         <p className="text-lg text-muted-foreground">
-          {user?.data ? "You are signed in!" : "Sign in to get started"}
+          {user?.data ? 'You are signed in!' : 'Sign in to get started'}
         </p>
         <p className="text-lg text-muted-foreground">
           {address
             ? `${address.substring(0, 6)}...${address.substring(
                 address.length - 4
               )}`
-            : "No address found"}
+            : 'No address found'}
         </p>
 
         {!user?.data ? (
@@ -36,7 +36,7 @@ export default function Home() {
                 <span>Signing in...</span>
               </>
             ) : (
-              "Sign in"
+              'Sign in'
             )}
           </button>
         ) : (

@@ -36,9 +36,9 @@ export async function getFarcasterManifest() {
       splashBackgroundColor: '#FFFFFF',
       webhookUrl: `${appUrl}/api/webhook`,
       // Metadata https://github.com/farcasterxyz/miniapps/discussions/191
-      subtitle: 'Guess the word that connect the others!', // 30 characters, no emojis or special characters, short description under app name
+      subtitle: 'Only for smart people!', // 30 characters, no emojis or special characters, short description under app name
       description:
-        'In this game, you will be given 2 words in clear text and you need to guess the word in the middle that has something to do with them.', // 170 characters, no emojis or special characters, promotional message displayed on Mini App Page
+        'In this game you will need to guess the word in the middle that has something to do with the other two words.', // 170 characters, no emojis or special characters, promotional message displayed on Mini App Page
       primaryCategory: 'social',
       tags: ['mini-app', 'game', 'brain', 'challenge', 'fun'], // up to 5 tags, filtering/search tags
       tagline: "Guess What? You'll Love It!", // 30 characters, marketing tagline should be punchy and descriptive
