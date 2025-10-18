@@ -99,20 +99,42 @@ export const UserProvider = ({
           ? context.location.cast.author.fid
           : undefined;
 
+      console.log('getToken');
+
+      // Check if quickAuth is available
+      if (!sdk.quickAuth) {
+        console.log('QuickAuth not available');
+        throw new Error('QuickAuth not available');
+      }
+      console.log('QuickAuth available');
+      console.log('quickAuth', sdk.quickAuth);
+
+      // TODO: code stuck here... why is this not working?
       const result = await sdk.quickAuth.getToken();
+
+      console.log('result', result);
 
       if (!result) {
         throw new Error('No token from SIWF Quick Auth');
       }
 
-      await signIn({
+      console.log('signIn', {
         fid: context.user.fid,
         referrerFid,
         token: result.token,
       });
+
+      signIn({
+        fid: context.user.fid,
+        referrerFid,
+        token: result.token,
+      });
+      console.log('signIn successful');
     } catch {
+      console.log('catch error failed to sign in');
       setError(new Error('Failed to sign in'));
     } finally {
+      console.log('setIsLoading(false)');
       setIsLoading(false);
     }
   }, [context, signIn]);
