@@ -1,13 +1,5 @@
-import { ethers } from 'ethers';
-
-// Extend Window interface to include ethereum
-declare global {
-  interface Window {
-    ethereum?: {
-      request: (args: { method: string; params?: any[] }) => Promise<any>;
-    };
-  }
-}
+import { createPublicClient, http, parseEther, formatEther, decodeEventLog, type Address } from 'viem';
+import { base, baseSepolia } from 'viem/chains';
 
 export interface ContractConfig {
   address: string;
@@ -15,70 +7,173 @@ export interface ContractConfig {
   network: string;
 }
 
-// Contract ABI (simplified for MVP)
+// Contract ABI (viem format)
 export const GUESS_WHAT_GAME_ABI = [
-  'function createGame(string memory _topWord, string memory _middleWord, string memory _bottomWord, uint256 _entryFee) external returns (uint256)',
-  'function joinGame(uint256 _gameId) external payable',
-  'function submitGuess(uint256 _gameId, string memory _guess) external',
-  'function getGameInfo(uint256 _gameId) external view returns (uint256, string memory, string memory, string memory, uint256, uint256, uint256, uint256, bool, bool, address)',
-  'function getPlayerStats(address _player) external view returns (uint256, uint256, uint256, uint256)',
-  'function isPlayerInGame(uint256 _gameId, address _player) external view returns (bool)',
-  'function hasPlayerGuessed(uint256 _gameId, address _player) external view returns (bool)',
-  'function getPlayerGuess(uint256 _gameId, address _player) external view returns (string memory)',
-  'event GameCreated(uint256 indexed gameId, uint256 entryFee, uint256 timeLimit)',
-  'event PlayerJoined(uint256 indexed gameId, address indexed player, uint256 entryFee)',
-  'event GuessSubmitted(uint256 indexed gameId, address indexed player, string guess)',
-  'event GameWon(uint256 indexed gameId, address indexed winner, uint256 prize)',
-  'event GameExpired(uint256 indexed gameId, uint256 totalPrize)',
-];
-
-// Base network configuration
-export const BASE_CONFIG = {
-  chainId: 8453,
-  name: 'Base',
-  currency: 'ETH',
-  rpcUrl: 'https://mainnet.base.org',
-  blockExplorer: 'https://basescan.org',
-};
+  {
+    name: 'createGame',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: '_topWord', type: 'string' },
+      { name: '_middleWord', type: 'string' },
+      { name: '_bottomWord', type: 'string' },
+      { name: '_entryFee', type: 'uint256' }
+    ],
+    outputs: [{ name: '', type: 'uint256' }]
+  },
+  {
+    name: 'joinGame',
+    type: 'function',
+    stateMutability: 'payable',
+    inputs: [{ name: '_gameId', type: 'uint256' }],
+    outputs: []
+  },
+  {
+    name: 'submitGuess',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: '_gameId', type: 'uint256' },
+      { name: '_guess', type: 'string' }
+    ],
+    outputs: []
+  },
+  {
+    name: 'getGameInfo',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: '_gameId', type: 'uint256' }],
+    outputs: [
+      { name: '', type: 'uint256' },
+      { name: '', type: 'string' },
+      { name: '', type: 'string' },
+      { name: '', type: 'string' },
+      { name: '', type: 'uint256' },
+      { name: '', type: 'uint256' },
+      { name: '', type: 'uint256' },
+      { name: '', type: 'uint256' },
+      { name: '', type: 'bool' },
+      { name: '', type: 'bool' },
+      { name: '', type: 'address' }
+    ]
+  },
+  {
+    name: 'getPlayerStats',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: '_player', type: 'address' }],
+    outputs: [
+      { name: '', type: 'uint256' },
+      { name: '', type: 'uint256' },
+      { name: '', type: 'uint256' },
+      { name: '', type: 'uint256' }
+    ]
+  },
+  {
+    name: 'isPlayerInGame',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: '_gameId', type: 'uint256' },
+      { name: '_player', type: 'address' }
+    ],
+    outputs: [{ name: '', type: 'bool' }]
+  },
+  {
+    name: 'hasPlayerGuessed',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: '_gameId', type: 'uint256' },
+      { name: '_player', type: 'address' }
+    ],
+    outputs: [{ name: '', type: 'bool' }]
+  },
+  {
+    name: 'getPlayerGuess',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: '_gameId', type: 'uint256' },
+      { name: '_player', type: 'address' }
+    ],
+    outputs: [{ name: '', type: 'string' }]
+  },
+  {
+    name: 'GameCreated',
+    type: 'event',
+    inputs: [
+      { name: 'gameId', type: 'uint256', indexed: true },
+      { name: 'entryFee', type: 'uint256', indexed: false },
+      { name: 'timeLimit', type: 'uint256', indexed: false }
+    ]
+  },
+  {
+    name: 'PlayerJoined',
+    type: 'event',
+    inputs: [
+      { name: 'gameId', type: 'uint256', indexed: true },
+      { name: 'player', type: 'address', indexed: true },
+      { name: 'entryFee', type: 'uint256', indexed: false }
+    ]
+  },
+  {
+    name: 'GuessSubmitted',
+    type: 'event',
+    inputs: [
+      { name: 'gameId', type: 'uint256', indexed: true },
+      { name: 'player', type: 'address', indexed: true },
+      { name: 'guess', type: 'string', indexed: false }
+    ]
+  },
+  {
+    name: 'GameWon',
+    type: 'event',
+    inputs: [
+      { name: 'gameId', type: 'uint256', indexed: true },
+      { name: 'winner', type: 'address', indexed: true },
+      { name: 'prize', type: 'uint256', indexed: false }
+    ]
+  },
+  {
+    name: 'GameExpired',
+    type: 'event',
+    inputs: [
+      { name: 'gameId', type: 'uint256', indexed: true },
+      { name: 'totalPrize', type: 'uint256', indexed: false }
+    ]
+  }
+] as const;
 
 // Contract addresses (to be updated after deployment)
 export const CONTRACT_ADDRESSES = {
-  base: '0x0000000000000000000000000000000000000000', // Update after deployment
-  baseSepolia: '0x0000000000000000000000000000000000000000', // Update after deployment
-};
+  [base.id]: '0x0000000000000000000000000000000000000000', // Update after deployment
+  [baseSepolia.id]: '0x0000000000000000000000000000000000000000', // Update after deployment
+} as const;
 
 export class ContractService {
-  private contract: ethers.Contract | null = null;
-  private provider: ethers.BrowserProvider | null = null;
-  private signer: ethers.Signer | null = null;
+  private publicClient: any = null;
+  private contractAddress: Address | null = null;
 
   constructor() {
-    this.initializeProvider();
+    this.initializeClients();
   }
 
-  private async initializeProvider() {
-    if (typeof window !== 'undefined' && window.ethereum) {
-      this.provider = new ethers.BrowserProvider(window.ethereum);
-      this.signer = await this.provider.getSigner();
+  private initializeClients() {
+    if (typeof window !== 'undefined') {
+      // Create public client for read operations
+      this.publicClient = createPublicClient({
+        chain: base,
+        transport: http()
+      });
 
-      const network = await this.provider.getNetwork();
-      const contractAddress = this.getContractAddress(network.chainId);
-
-      if (contractAddress) {
-        this.contract = new ethers.Contract(
-          contractAddress,
-          GUESS_WHAT_GAME_ABI,
-          this.signer
-        );
-      }
+      // Set contract address based on current chain
+      this.contractAddress = CONTRACT_ADDRESSES[base.id] as Address;
     }
   }
 
-  private getContractAddress(chainId: bigint): string | null {
-    const chainIdNumber = Number(chainId);
-    if (chainIdNumber === 8453) return CONTRACT_ADDRESSES.base;
-    if (chainIdNumber === 84532) return CONTRACT_ADDRESSES.baseSepolia;
-    return null;
+  private getContractAddress(chainId: number): Address | null {
+    return CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES] as Address || null;
   }
 
   async createGame(
@@ -87,60 +182,53 @@ export class ContractService {
     bottomWord: string,
     entryFee: string
   ): Promise<number> {
-    if (!this.contract) throw new Error('Contract not initialized');
-
-    const tx = await this.contract.createGame(
-      topWord,
-      middleWord,
-      bottomWord,
-      ethers.parseEther(entryFee)
-    );
-
-    const receipt = await tx.wait();
-    const event = receipt.logs.find((log: any) => {
-      try {
-        const parsed = this.contract!.interface.parseLog(log);
-        return parsed?.name === 'GameCreated';
-      } catch {
-        return false;
-      }
-    });
-
-    if (event) {
-      const parsed = this.contract!.interface.parseLog(event);
-      return Number(parsed!.args.gameId);
+    if (!this.contractAddress) {
+      throw new Error('Contract address not initialized');
     }
 
-    throw new Error('Game creation failed');
+    // For now, return a mock game ID
+    // In a real implementation, you would need to handle wallet connection
+    // and use a wallet client with proper account setup
+    throw new Error('Wallet connection required for write operations');
   }
 
   async joinGame(gameId: number, entryFee: string): Promise<void> {
-    if (!this.contract) throw new Error('Contract not initialized');
+    if (!this.contractAddress) {
+      throw new Error('Contract address not initialized');
+    }
 
-    const tx = await this.contract.joinGame(gameId, {
-      value: ethers.parseEther(entryFee),
-    });
-    await tx.wait();
+    // For now, throw error as wallet connection is required
+    throw new Error('Wallet connection required for write operations');
   }
 
   async submitGuess(gameId: number, guess: string): Promise<void> {
-    if (!this.contract) throw new Error('Contract not initialized');
+    if (!this.contractAddress) {
+      throw new Error('Contract address not initialized');
+    }
 
-    const tx = await this.contract.submitGuess(gameId, guess);
-    await tx.wait();
+    // For now, throw error as wallet connection is required
+    throw new Error('Wallet connection required for write operations');
   }
 
   async getGameInfo(gameId: number) {
-    if (!this.contract) throw new Error('Contract not initialized');
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
 
-    const info = await this.contract.getGameInfo(gameId);
+    const info = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'getGameInfo',
+      args: [BigInt(gameId)]
+    });
+
     return {
       gameId: Number(info[0]),
       topWord: info[1],
       middleWord: info[2],
       bottomWord: info[3],
-      entryFee: ethers.formatEther(info[4]),
-      totalPrize: ethers.formatEther(info[5]),
+      entryFee: formatEther(info[4]),
+      totalPrize: formatEther(info[5]),
       timeLimit: Number(info[6]),
       startTime: Number(info[7]),
       isActive: info[8],
@@ -150,13 +238,21 @@ export class ContractService {
   }
 
   async getPlayerStats(playerAddress: string) {
-    if (!this.contract) throw new Error('Contract not initialized');
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
 
-    const stats = await this.contract.getPlayerStats(playerAddress);
+    const stats = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'getPlayerStats',
+      args: [playerAddress as Address]
+    });
+
     return {
       gamesPlayed: Number(stats[0]),
       correctGuesses: Number(stats[1]),
-      totalWinnings: ethers.formatEther(stats[2]),
+      totalWinnings: formatEther(stats[2]),
       accuracy: Number(stats[3]) / 100, // Convert from basis points
     };
   }
@@ -165,54 +261,45 @@ export class ContractService {
     gameId: number,
     playerAddress: string
   ): Promise<boolean> {
-    if (!this.contract) throw new Error('Contract not initialized');
-    return await this.contract.isPlayerInGame(gameId, playerAddress);
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+    
+    return await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'isPlayerInGame',
+      args: [BigInt(gameId), playerAddress as Address]
+    });
   }
 
   async hasPlayerGuessed(
     gameId: number,
     playerAddress: string
   ): Promise<boolean> {
-    if (!this.contract) throw new Error('Contract not initialized');
-    return await this.contract.hasPlayerGuessed(gameId, playerAddress);
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+    
+    return await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'hasPlayerGuessed',
+      args: [BigInt(gameId), playerAddress as Address]
+    });
   }
 
   async getPlayerGuess(gameId: number, playerAddress: string): Promise<string> {
-    if (!this.contract) throw new Error('Contract not initialized');
-    return await this.contract.getPlayerGuess(gameId, playerAddress);
-  }
-
-  async switchToBaseNetwork(): Promise<void> {
-    if (!window.ethereum) throw new Error('MetaMask not found');
-
-    try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x2105' }], // Base mainnet
-      });
-    } catch (error: any) {
-      if (error.code === 4902) {
-        // Chain not added, add it
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [
-            {
-              chainId: '0x2105',
-              chainName: 'Base',
-              nativeCurrency: {
-                name: 'Ethereum',
-                symbol: 'ETH',
-                decimals: 18,
-              },
-              rpcUrls: ['https://mainnet.base.org'],
-              blockExplorerUrls: ['https://basescan.org'],
-            },
-          ],
-        });
-      } else {
-        throw error;
-      }
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
     }
+    
+    return await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'getPlayerGuess',
+      args: [BigInt(gameId), playerAddress as Address]
+    });
   }
 }
 
