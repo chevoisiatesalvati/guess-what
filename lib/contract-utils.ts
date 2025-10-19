@@ -34,7 +34,7 @@ export const GUESS_WHAT_GAME_ABI = [
   {
     name: 'submitGuess',
     type: 'function',
-    stateMutability: 'nonpayable',
+    stateMutability: 'payable',
     inputs: [
       { name: '_gameId', type: 'uint256' },
       { name: '_guess', type: 'string' }
@@ -373,10 +373,11 @@ export class ContractService {
     }
   }
 
-  async submitGuess(gameId: number, guess: string): Promise<void> {
+  async submitGuess(gameId: number, guess: string, entryFee: string): Promise<void> {
     console.log('🎯 Submitting guess to contract...');
     console.log('🆔 Game ID:', gameId);
     console.log('💭 Guess:', guess);
+    console.log('💰 Entry fee:', entryFee);
     console.log('📍 Contract address:', this.contractAddress);
     
     if (!this.contractAddress) {
@@ -395,6 +396,7 @@ export class ContractService {
         abi: GUESS_WHAT_GAME_ABI,
         functionName: 'submitGuess',
         args: [BigInt(gameId), guess],
+        value: parseEther(entryFee),
       });
       console.log('📋 Transaction hash:', hash);
 

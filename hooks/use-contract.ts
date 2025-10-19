@@ -81,12 +81,12 @@ export const useContract = () => {
   );
 
   const submitGuess = useCallback(
-    async (gameId: number, guess: string): Promise<void> => {
+    async (gameId: number, guess: string, entryFee: string): Promise<void> => {
       setIsLoading(true);
       setError(null);
 
       try {
-        await contractService.submitGuess(gameId, guess);
+        await contractService.submitGuess(gameId, guess, entryFee);
       } catch (err: any) {
         setError(err.message || 'Failed to submit guess');
         throw err;
