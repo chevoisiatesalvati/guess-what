@@ -97,76 +97,19 @@ export default function Leaderboard() {
           </div>
         )}
 
-        {/* Top Players Placeholder */}
+        {/* Top Players Coming Soon */}
         <div className="bg-white p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Top Players
           </h2>
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map((rank) => (
-              <div
-                key={rank}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div className="flex items-center space-x-3">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                      rank === 1
-                        ? 'bg-yellow-500'
-                        : rank === 2
-                        ? 'bg-gray-400'
-                        : rank === 3
-                        ? 'bg-orange-500'
-                        : 'bg-gray-300'
-                    }`}
-                  >
-                    {rank}
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      {rank === 1
-                        ? '🏆 Champion'
-                        : rank === 2
-                        ? '🥈 Runner-up'
-                        : rank === 3
-                        ? '🥉 Third Place'
-                        : `Player #${rank}`}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {rank === 1
-                        ? '0x1234...5678'
-                        : rank === 2
-                        ? '0x9876...4321'
-                        : rank === 3
-                        ? '0x5555...9999'
-                        : '0x0000...0000'}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-gray-900">
-                    {rank === 1
-                      ? '12.5'
-                      : rank === 2
-                      ? '8.3'
-                      : rank === 3
-                      ? '5.7'
-                      : '0.0'}{' '}
-                    ETH
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {rank === 1
-                      ? '95%'
-                      : rank === 2
-                      ? '87%'
-                      : rank === 3
-                      ? '82%'
-                      : '0%'}{' '}
-                    accuracy
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="bg-blue-50 p-8 rounded-lg text-center">
+            <div className="text-4xl mb-3">🏆</div>
+            <div className="text-lg font-semibold text-blue-900 mb-2">
+              Coming Soon!
+            </div>
+            <div className="text-sm text-blue-700">
+              Global leaderboard will be available soon. Keep playing to climb the ranks!
+            </div>
           </div>
         </div>
 

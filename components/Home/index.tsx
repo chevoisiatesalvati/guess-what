@@ -11,9 +11,15 @@ export default function Home() {
   const { user, isLoading, error, signIn } = useUser();
   const { address } = useAccount();
   const router = useRouter();
-  const { isAdmin: checkIsAdmin } = useContract();
+  const { isAdmin: checkIsAdmin, getPlayerStats } = useContract();
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(false);
+  const [playerStats, setPlayerStats] = useState({
+    gamesPlayed: 0,
+    correctGuesses: 0,
+    totalWinnings: '0',
+    accuracy: 0,
+  });
 
   // Use real user data from context
   const currentUser = user || {
@@ -78,6 +84,29 @@ export default function Home() {
 
     checkAdminStatus();
   }, [address, checkIsAdmin]);
+
+  // Fetch player stats from contract
+  useEffect(() => {
+    const fetchPlayerStats = async () => {
+      if (address) {
+        try {
+          const stats = await getPlayerStats();
+          if (stats) {
+            setPlayerStats({
+              gamesPlayed: stats.gamesPlayed,
+              correctGuesses: stats.correctGuesses,
+              totalWinnings: stats.totalWinnings,
+              accuracy: stats.accuracy,
+            });
+          }
+        } catch (error) {
+          console.error('❌ Error fetching player stats:', error);
+        }
+      }
+    };
+
+    fetchPlayerStats();
+  }, [address, getPlayerStats]);
 
   // Show login screen if user is not authenticated
   if (!user?.data && !isLoading) {
@@ -177,15 +206,15 @@ export default function Home() {
         {/* Game Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-blue-50 p-6 rounded-lg text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">0</div>
+            <div className="text-3xl font-bold text-blue-600 mb-2">{playerStats.gamesPlayed}</div>
             <div className="text-gray-600">Games Played</div>
           </div>
           <div className="bg-green-50 p-6 rounded-lg text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">0</div>
+            <div className="text-3xl font-bold text-green-600 mb-2">{playerStats.correctGuesses}</div>
             <div className="text-gray-600">Correct Guesses</div>
           </div>
           <div className="bg-purple-50 p-6 rounded-lg text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">0%</div>
+            <div className="text-3xl font-bold text-purple-600 mb-2">{playerStats.accuracy.toFixed(1)}%</div>
             <div className="text-gray-600">Accuracy</div>
           </div>
         </div>
