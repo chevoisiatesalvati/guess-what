@@ -221,7 +221,7 @@ export const GUESS_WHAT_GAME_ABI = [
 // Contract addresses (to be updated after deployment)
 export const CONTRACT_ADDRESSES = {
   [base.id]: '0x0000000000000000000000000000000000000000', // Update after mainnet deployment
-  [baseSepolia.id]: '0x22C74211f68393852E91D533D2a4FEcFf0d77f4F', // Updated contract with comprehensive stats tracking
+  [baseSepolia.id]: '0xFcfF1b2Ba3859E7F65F59bA43799Afa3BeDB45b0',
 } as const;
 
 export class ContractService {

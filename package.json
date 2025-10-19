@@ -10,7 +10,9 @@
     "frames": "frames",
     "compile": "hardhat compile",
     "deploy:base-sepolia": "hardhat ignition deploy ignition/modules/GuessWhatGame.ts --network baseSepolia",
-    "deploy:base": "hardhat ignition deploy ignition/modules/GuessWhatGame.ts --network base"
+    "deploy:base": "hardhat ignition deploy ignition/modules/GuessWhatGame.ts --network base",
+    "verify:base-sepolia": "npx jiti scripts/verify-contract.ts baseSepolia",
+    "verify:base": "npx jiti scripts/verify-contract.ts base"
   },
   "dependencies": {
     "@farcaster/auth-client": "^0.7.0",

@@ -123,6 +123,11 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         PlayerStats storage stats = playerStats[msg.sender];
         stats.gamesPlayed++;
         
+        // Recalculate accuracy since gamesPlayed changed
+        if (stats.gamesPlayed > 0) {
+            stats.accuracy = (stats.correctGuesses * 10000) / stats.gamesPlayed;
+        }
+        
         emit PlayerJoined(_gameId, msg.sender, msg.value);
     }
 
