@@ -43,7 +43,7 @@ export default function Home() {
   console.log('Home component - error:', error);
 
   // Navigation handlers
-  const handleStartGame = () => {
+  const goToGameLobby = () => {
     router.push('/game');
   };
 
@@ -193,10 +193,10 @@ export default function Home() {
         {/* Game Actions */}
         <div className="space-y-4">
           <button 
-            onClick={handleStartGame}
+            onClick={goToGameLobby}
             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
-            Join a Game
+            Game Lobby
           </button>
 
           <div className="grid grid-cols-2 gap-4">

@@ -179,7 +179,7 @@ export default function Leaderboard() {
             onClick={() => window.history.back()}
             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            Back to Game
+            ← Go Back
           </button>
         </div>
       </div>

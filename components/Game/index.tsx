@@ -276,12 +276,18 @@ export default function Game() {
               : 'Join a Game (0.001 ETH)'}
           </button>
 
-          <div className="mt-4">
+          <div className="mt-4 space-y-3">
             <button
               onClick={() => (window.location.href = '/leaderboard')}
               className="w-full bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors"
             >
               View Leaderboard
+            </button>
+            <button
+              onClick={() => (window.location.href = '/')}
+              className="w-full bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-200 transition-colors"
+            >
+              ← Back to Home
             </button>
           </div>
         </div>
