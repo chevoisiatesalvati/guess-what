@@ -31,8 +31,6 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
 
     // State variables
     uint256 public nextGameId = 1;
-    uint256 public constant MIN_ENTRY_FEE = 0.001 ether;
-    uint256 public constant MAX_ENTRY_FEE = 0.1 ether;
     uint256 public defaultTimeLimit = 30; // 30 seconds (mutable)
     uint256 public constant PLATFORM_FEE_PERCENT = 5; // 5% platform fee
     
@@ -98,7 +96,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         uint256 _entryFee,
         uint256 _initialPrizePool
     ) external onlyAdmin payable returns (uint256) {
-        require(_entryFee >= MIN_ENTRY_FEE && _entryFee <= MAX_ENTRY_FEE, "Invalid entry fee");
+        require(_entryFee > 0, "Entry fee must be greater than 0");
         require(msg.value >= _initialPrizePool, "Insufficient funds for prize pool");
         
         uint256 gameId = nextGameId++;
@@ -270,7 +268,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         require(activeCount > 0, "No active games available");
         
         // Use block timestamp as seed for randomness
-        uint256 randomIndex = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender))) % activeCount;
+        uint256 randomIndex = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % activeCount;
         return activeGames[randomIndex];
     }
 
