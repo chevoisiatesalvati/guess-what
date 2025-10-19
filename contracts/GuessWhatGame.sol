@@ -121,11 +121,15 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         emit PlayerJoined(_gameId, msg.sender, msg.value);
     }
 
-    function submitGuess(uint256 _gameId, string memory _guess) external gameExists(_gameId) gameActive(_gameId) {
+    function submitGuess(uint256 _gameId, string memory _guess) external payable gameExists(_gameId) gameActive(_gameId) nonReentrant {
         Game storage game = games[_gameId];
         require(game.players[msg.sender], "Player not in this game");
-        require(bytes(game.playerGuesses[msg.sender]).length == 0, "Already submitted guess");
+        require(msg.value == game.entryFee, "Incorrect entry fee");
         
+        // Add entry fee to prize pool for each guess
+        game.totalPrize += msg.value;
+        
+        // Store the latest guess
         game.playerGuesses[msg.sender] = _guess;
         
         // Check if guess is correct
@@ -304,23 +308,32 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     }
 
     // Emergency functions
-    function withdraw() external onlyOwner {
-        payable(owner()).transfer(address(this).balance);
+    function emergencyWithdraw() external onlyOwner nonReentrant {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds to withdraw");
+        payable(owner()).transfer(balance);
+    }
+    
+    function getContractBalance() external view returns (uint256) {
+        return address(this).balance;
     }
 
     // Emergency function to close a game and return prize pool to admin
-    function emergencyCloseGame(uint256 _gameId) external onlyAdmin {
+    function emergencyCloseGame(uint256 _gameId) external onlyAdmin nonReentrant {
         Game storage game = games[_gameId];
         require(game.isActive, "Game is not active");
         
+        uint256 prizeToReturn = game.totalPrize;
+        
         game.isActive = false;
         game.isCompleted = true;
+        game.totalPrize = 0; // Prevent re-entrancy
         
         // Return the total prize pool to the admin who closes the game
-        if (game.totalPrize > 0) {
-            payable(msg.sender).transfer(game.totalPrize);
+        if (prizeToReturn > 0) {
+            payable(msg.sender).transfer(prizeToReturn);
         }
         
-        emit GameExpired(_gameId, game.totalPrize);
+        emit GameExpired(_gameId, prizeToReturn);
     }
 }

@@ -55,8 +55,6 @@ export const GUESS_WHAT_GAME_ABI = [
       { name: '', type: 'uint256' },
       { name: '', type: 'uint256' },
       { name: '', type: 'uint256' },
-      { name: '', type: 'uint256' },
-      { name: '', type: 'uint256' },
       { name: '', type: 'bool' },
       { name: '', type: 'bool' },
       { name: '', type: 'address' }
@@ -179,8 +177,7 @@ export const GUESS_WHAT_GAME_ABI = [
     type: 'event',
     inputs: [
       { name: 'gameId', type: 'uint256', indexed: true },
-      { name: 'entryFee', type: 'uint256', indexed: false },
-      { name: 'timeLimit', type: 'uint256', indexed: false }
+      { name: 'entryFee', type: 'uint256', indexed: false }
     ]
   },
   {
@@ -223,7 +220,7 @@ export const GUESS_WHAT_GAME_ABI = [
 // Contract addresses (to be updated after deployment)
 export const CONTRACT_ADDRESSES = {
   [base.id]: '0x0000000000000000000000000000000000000000', // Update after mainnet deployment
-  [baseSepolia.id]: '0xe42a9022CEE671b9e14EC222497c03add38D44Ae', // Updated contract with removed time limits
+  [baseSepolia.id]: '0xB785355865fbeD8Bfc841ED59086B84aEEFb5696', // Updated contract with unlimited guesses
 } as const;
 
 export class ContractService {
@@ -432,11 +429,10 @@ export class ContractService {
       entryFee: formatEther(info[4]),
       totalPrize: formatEther(info[5]),
       initialPrizePool: formatEther(info[6]),
-      timeLimit: Number(info[7]),
-      startTime: Number(info[8]),
-      isActive: info[9],
-      isCompleted: info[10],
-      winner: info[11],
+      startTime: Number(info[7]),
+      isActive: info[8],
+      isCompleted: info[9],
+      winner: info[10],
     };
   }
 

@@ -9,7 +9,7 @@ export interface ContractGameInfo {
   bottomWord: string;
   entryFee: string;
   totalPrize: string;
-  timeLimit: number;
+  initialPrizePool: string;
   startTime: number;
   isActive: boolean;
   isCompleted: boolean;
