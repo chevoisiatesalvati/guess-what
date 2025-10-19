@@ -53,7 +53,7 @@ export async function getFarcasterManifest() {
       noindex: noindex,
     },
     baseBuilder: {
-      ownerAddress: '0xAF4dAc552438D63E49cdC4c640E2A5961c93d017',
+      ownerAddress: '0x970E0306d80732f0e5D641e91E04e00cB72e49FF',
     },
   };
 }
