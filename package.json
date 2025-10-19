@@ -54,7 +54,6 @@
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.6",
-    "forge-std": "https://github.com/foundry-rs/forge-std.git#v1.9.4",
     "hardhat": "^3.0.7",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
