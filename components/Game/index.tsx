@@ -273,7 +273,7 @@ export default function Game() {
           >
             {contractLoading
               ? 'Joining Game...'
-              : 'Start New Game (0.001 ETH)'}
+              : 'Join a Game (0.001 ETH)'}
           </button>
 
           <div className="mt-4">

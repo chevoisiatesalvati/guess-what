@@ -196,7 +196,7 @@ export default function Home() {
             onClick={handleStartGame}
             className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
-            Start New Game
+            Join a Game
           </button>
 
           <div className="grid grid-cols-2 gap-4">

@@ -13,7 +13,6 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         uint256 entryFee;
         uint256 totalPrize;
         uint256 initialPrizePool; // Admin-assigned initial prize pool
-        uint256 timeLimit;
         uint256 startTime;
         bool isActive;
         bool isCompleted;
@@ -31,7 +30,6 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
 
     // State variables
     uint256 public nextGameId = 1;
-    uint256 public defaultTimeLimit = 30; // 30 seconds (mutable)
     uint256 public constant PLATFORM_FEE_PERCENT = 5; // 5% platform fee
     
     mapping(uint256 => Game) public games;
@@ -43,7 +41,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     address[] public adminList;
     
     // Events
-    event GameCreated(uint256 indexed gameId, uint256 entryFee, uint256 timeLimit);
+    event GameCreated(uint256 indexed gameId, uint256 entryFee);
     event PlayerJoined(uint256 indexed gameId, address indexed player, uint256 entryFee);
     event GuessSubmitted(uint256 indexed gameId, address indexed player, string guess);
     event GameWon(uint256 indexed gameId, address indexed winner, uint256 prize);
@@ -75,13 +73,6 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         _;
     }
 
-    modifier gameNotExpired(uint256 _gameId) {
-        require(
-            block.timestamp <= games[_gameId].startTime + games[_gameId].timeLimit,
-            "Game has expired"
-        );
-        _;
-    }
 
     modifier onlyAdmin() {
         require(admins[msg.sender] || msg.sender == owner(), "Only admin or owner");
@@ -109,17 +100,16 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         game.entryFee = _entryFee;
         game.initialPrizePool = _initialPrizePool;
         game.totalPrize = _initialPrizePool; // Start with admin's prize pool
-        game.timeLimit = defaultTimeLimit;
         game.startTime = block.timestamp;
         game.isActive = true;
         game.isCompleted = false;
         game.winner = address(0);
         
-        emit GameCreated(gameId, _entryFee, defaultTimeLimit);
+        emit GameCreated(gameId, _entryFee);
         return gameId;
     }
 
-    function joinGame(uint256 _gameId) external payable gameExists(_gameId) gameActive(_gameId) gameNotExpired(_gameId) {
+    function joinGame(uint256 _gameId) external payable gameExists(_gameId) gameActive(_gameId) {
         Game storage game = games[_gameId];
         require(!game.players[msg.sender], "Player already joined this game");
         require(msg.value == game.entryFee, "Incorrect entry fee");
@@ -131,7 +121,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         emit PlayerJoined(_gameId, msg.sender, msg.value);
     }
 
-    function submitGuess(uint256 _gameId, string memory _guess) external gameExists(_gameId) gameActive(_gameId) gameNotExpired(_gameId) {
+    function submitGuess(uint256 _gameId, string memory _guess) external gameExists(_gameId) gameActive(_gameId) {
         Game storage game = games[_gameId];
         require(game.players[msg.sender], "Player not in this game");
         require(bytes(game.playerGuesses[msg.sender]).length == 0, "Already submitted guess");
@@ -176,18 +166,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         emit GameWon(_gameId, _winner, winnerPrize);
     }
 
-    function expireGame(uint256 _gameId) external gameExists(_gameId) gameActive(_gameId) {
-        Game storage game = games[_gameId];
-        require(block.timestamp > game.startTime + game.timeLimit, "Game has not expired yet");
-        
-        game.isActive = false;
-        game.isCompleted = true;
-        
-        // Add total prize to next game's prize pool (simplified for MVP)
-        // In a full implementation, this would be handled differently
-        
-        emit GameExpired(_gameId, game.totalPrize);
-    }
+    // expireGame function removed - games don't expire
 
     function getGameInfo(uint256 _gameId) external view gameExists(_gameId) returns (
         uint256 gameId,
@@ -197,7 +176,6 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         uint256 entryFee,
         uint256 totalPrize,
         uint256 initialPrizePool,
-        uint256 timeLimit,
         uint256 startTime,
         bool isActive,
         bool isCompleted,
@@ -212,7 +190,6 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
             game.entryFee,
             game.totalPrize,
             game.initialPrizePool,
-            game.timeLimit,
             game.startTime,
             game.isActive,
             game.isCompleted,
@@ -331,8 +308,19 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         payable(owner()).transfer(address(this).balance);
     }
 
-    function setTimeLimit(uint256 _newTimeLimit) external onlyOwner {
-        require(_newTimeLimit >= 10 && _newTimeLimit <= 300, "Invalid time limit");
-        defaultTimeLimit = _newTimeLimit;
+    // Emergency function to close a game and return prize pool to admin
+    function emergencyCloseGame(uint256 _gameId) external onlyAdmin {
+        Game storage game = games[_gameId];
+        require(game.isActive, "Game is not active");
+        
+        game.isActive = false;
+        game.isCompleted = true;
+        
+        // Return the total prize pool to the admin who closes the game
+        if (game.totalPrize > 0) {
+            payable(msg.sender).transfer(game.totalPrize);
+        }
+        
+        emit GameExpired(_gameId, game.totalPrize);
     }
 }
