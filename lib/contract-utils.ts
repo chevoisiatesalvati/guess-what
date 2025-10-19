@@ -69,6 +69,7 @@ export const GUESS_WHAT_GAME_ABI = [
       { name: '', type: 'uint256' },
       { name: '', type: 'uint256' },
       { name: '', type: 'uint256' },
+      { name: '', type: 'uint256' },
       { name: '', type: 'uint256' }
     ]
   },
@@ -220,7 +221,7 @@ export const GUESS_WHAT_GAME_ABI = [
 // Contract addresses (to be updated after deployment)
 export const CONTRACT_ADDRESSES = {
   [base.id]: '0x0000000000000000000000000000000000000000', // Update after mainnet deployment
-  [baseSepolia.id]: '0xB785355865fbeD8Bfc841ED59086B84aEEFb5696', // Updated contract with unlimited guesses
+  [baseSepolia.id]: '0x22C74211f68393852E91D533D2a4FEcFf0d77f4F', // Updated contract with comprehensive stats tracking
 } as const;
 
 export class ContractService {
@@ -455,9 +456,10 @@ export class ContractService {
 
     return {
       gamesPlayed: Number(stats[0]),
-      correctGuesses: Number(stats[1]),
-      totalWinnings: formatEther(stats[2]),
-      accuracy: Number(stats[3]) / 100, // Convert from basis points
+      guessesPlayed: Number(stats[1]),
+      correctGuesses: Number(stats[2]),
+      totalWinnings: formatEther(stats[3]),
+      accuracy: Number(stats[4]) / 100, // Convert from basis points
     };
   }
 

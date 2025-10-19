@@ -23,6 +23,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
 
     struct PlayerStats {
         uint256 gamesPlayed;
+        uint256 guessesPlayed;
         uint256 correctGuesses;
         uint256 totalWinnings;
         uint256 accuracy; // in basis points (10000 = 100%)
@@ -118,6 +119,10 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         game.totalPrize += msg.value;
         playerGames[msg.sender].push(_gameId);
         
+        // Update player stats - increment games played
+        PlayerStats storage stats = playerStats[msg.sender];
+        stats.gamesPlayed++;
+        
         emit PlayerJoined(_gameId, msg.sender, msg.value);
     }
 
@@ -128,6 +133,10 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         
         // Add entry fee to prize pool for each guess
         game.totalPrize += msg.value;
+        
+        // Update player stats - increment guesses played
+        PlayerStats storage stats = playerStats[msg.sender];
+        stats.guessesPlayed++;
         
         // Store the latest guess
         game.playerGuesses[msg.sender] = _guess;
@@ -152,10 +161,12 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         
         // Update player stats
         PlayerStats storage stats = playerStats[_winner];
-        stats.gamesPlayed++;
         stats.correctGuesses++;
         stats.totalWinnings += winnerPrize;
-        stats.accuracy = (stats.correctGuesses * 10000) / stats.gamesPlayed;
+        // Calculate accuracy: correctGuesses / gamesPlayed
+        if (stats.gamesPlayed > 0) {
+            stats.accuracy = (stats.correctGuesses * 10000) / stats.gamesPlayed;
+        }
         
         // Transfer prize to winner
         if (winnerPrize > 0) {
@@ -203,6 +214,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
 
     function getPlayerStats(address _player) external view returns (
         uint256 gamesPlayed,
+        uint256 guessesPlayed,
         uint256 correctGuesses,
         uint256 totalWinnings,
         uint256 accuracy
@@ -210,6 +222,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         PlayerStats storage stats = playerStats[_player];
         return (
             stats.gamesPlayed,
+            stats.guessesPlayed,
             stats.correctGuesses,
             stats.totalWinnings,
             stats.accuracy

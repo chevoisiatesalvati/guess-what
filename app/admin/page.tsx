@@ -159,7 +159,7 @@ export default function AdminPage() {
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="e.g., cat"
+                placeholder="e.g., hack"
               />
             </div>
 
@@ -175,7 +175,7 @@ export default function AdminPage() {
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="e.g., animal"
+                placeholder="e.g., ethrome"
               />
             </div>
 
@@ -191,7 +191,7 @@ export default function AdminPage() {
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="e.g., dog"
+                placeholder="e.g., sleepless"
               />
             </div>
 

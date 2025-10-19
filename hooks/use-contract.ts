@@ -18,6 +18,7 @@ export interface ContractGameInfo {
 
 export interface ContractPlayerStats {
   gamesPlayed: number;
+  guessesPlayed: number;
   correctGuesses: number;
   totalWinnings: string;
   accuracy: number;

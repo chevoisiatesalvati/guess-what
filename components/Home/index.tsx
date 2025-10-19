@@ -16,6 +16,7 @@ export default function Home() {
   const [checkingAdmin, setCheckingAdmin] = useState(false);
   const [playerStats, setPlayerStats] = useState({
     gamesPlayed: 0,
+    guessesPlayed: 0,
     correctGuesses: 0,
     totalWinnings: '0',
     accuracy: 0,
@@ -94,6 +95,7 @@ export default function Home() {
           if (stats) {
             setPlayerStats({
               gamesPlayed: stats.gamesPlayed,
+              guessesPlayed: stats.guessesPlayed,
               correctGuesses: stats.correctGuesses,
               totalWinnings: stats.totalWinnings,
               accuracy: stats.accuracy,
@@ -204,18 +206,22 @@ export default function Home() {
         </div>
 
         {/* Game Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-blue-50 p-6 rounded-lg text-center">
             <div className="text-3xl font-bold text-blue-600 mb-2">{playerStats.gamesPlayed}</div>
-            <div className="text-gray-600">Games Played</div>
+            <div className="text-gray-600 text-sm">Games Played</div>
+          </div>
+          <div className="bg-orange-50 p-6 rounded-lg text-center">
+            <div className="text-3xl font-bold text-orange-600 mb-2">{playerStats.guessesPlayed}</div>
+            <div className="text-gray-600 text-sm">Total Guesses</div>
           </div>
           <div className="bg-green-50 p-6 rounded-lg text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">{playerStats.correctGuesses}</div>
-            <div className="text-gray-600">Correct Guesses</div>
+            <div className="text-gray-600 text-sm">Games Won</div>
           </div>
           <div className="bg-purple-50 p-6 rounded-lg text-center">
             <div className="text-3xl font-bold text-purple-600 mb-2">{playerStats.accuracy.toFixed(1)}%</div>
-            <div className="text-gray-600">Accuracy</div>
+            <div className="text-gray-600 text-sm">Win Rate</div>
           </div>
         </div>
 

@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 interface LeaderboardEntry {
   address: string;
   gamesPlayed: number;
+  guessesPlayed: number;
   correctGuesses: number;
   totalWinnings: string;
   accuracy: number;
@@ -27,6 +28,7 @@ export default function Leaderboard() {
             setPlayerStats({
               address,
               gamesPlayed: stats.gamesPlayed,
+              guessesPlayed: stats.guessesPlayed,
               correctGuesses: stats.correctGuesses,
               totalWinnings: stats.totalWinnings,
               accuracy: stats.accuracy,
@@ -68,30 +70,42 @@ export default function Leaderboard() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Your Stats
             </h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg text-center">
                 <div className="text-2xl font-bold text-blue-600">
                   {playerStats.gamesPlayed}
                 </div>
                 <div className="text-sm text-gray-600">Games Played</div>
               </div>
+              <div className="bg-orange-50 p-4 rounded-lg text-center">
+                <div className="text-2xl font-bold text-orange-600">
+                  {playerStats.guessesPlayed}
+                </div>
+                <div className="text-sm text-gray-600">Total Guesses</div>
+              </div>
               <div className="bg-green-50 p-4 rounded-lg text-center">
                 <div className="text-2xl font-bold text-green-600">
                   {playerStats.correctGuesses}
                 </div>
-                <div className="text-sm text-gray-600">Correct Guesses</div>
+                <div className="text-sm text-gray-600">Games Won</div>
               </div>
               <div className="bg-purple-50 p-4 rounded-lg text-center">
                 <div className="text-2xl font-bold text-purple-600">
                   {playerStats.accuracy.toFixed(1)}%
                 </div>
-                <div className="text-sm text-gray-600">Accuracy</div>
+                <div className="text-sm text-gray-600">Win Rate</div>
               </div>
               <div className="bg-yellow-50 p-4 rounded-lg text-center">
                 <div className="text-2xl font-bold text-yellow-600">
-                  {parseFloat(playerStats.totalWinnings).toFixed(3)}
+                  {parseFloat(playerStats.totalWinnings).toFixed(6)}
                 </div>
                 <div className="text-sm text-gray-600">ETH Won</div>
+              </div>
+              <div className="bg-pink-50 p-4 rounded-lg text-center">
+                <div className="text-2xl font-bold text-pink-600">
+                  {playerStats.gamesPlayed > 0 ? (playerStats.guessesPlayed / playerStats.gamesPlayed).toFixed(1) : '0'}
+                </div>
+                <div className="text-sm text-gray-600">Avg Guesses/Game</div>
               </div>
             </div>
           </div>
