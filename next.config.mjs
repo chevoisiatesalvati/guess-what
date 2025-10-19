@@ -7,6 +7,9 @@ jiti("./lib/env");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    GIT_CONFIG_URL_INSTEAD_OF: 'git@github.com:https://github.com/'
+  },
   images: {
     remotePatterns: [
       {

@@ -289,20 +289,6 @@ export class ContractService {
       const entryFeeWei = parseEther(entryFee);
       const prizePoolWei = parseEther(initialPrizePool);
       
-
-      // debug transaction values
-      console.log('💰 Transaction values:', {
-        entryFee: entryFee,
-        entryFeeWei: entryFeeWei.toString(),
-        initialPrizePool: initialPrizePool,
-        prizePoolWei: prizePoolWei.toString(),
-        value: prizePoolWei.toString(),
-        valueWei: prizePoolWei.toString(),
-        abi: GUESS_WHAT_GAME_ABI,
-        functionName: 'createGame',
-        args: [topWord, middleWord, bottomWord, entryFeeWei, prizePoolWei],
-        address: this.contractAddress,
-      });
       
       const hash = await walletClient.writeContract({
         address: this.contractAddress,
