@@ -117,12 +117,16 @@ export default function Game() {
       
       await submitContractGuess(gameId, normalizedGuess, gameData.entryFee);
       
+      // Transaction is now confirmed with 2 block confirmations
       // Check if the guess was correct by refreshing game data
       const updatedGameInfo = await getGameInfo(gameId);
+      console.log('📊 Updated game info:', updatedGameInfo);
       
       if (!updatedGameInfo.isActive) {
         // Game ended - player won!
-        setResultMessage(`🎉 Correct! You won ${updatedGameInfo.totalPrize} ETH!`);
+        const platformFee = parseFloat(updatedGameInfo.totalPrize) * 0.05;
+        const winnerPrize = parseFloat(updatedGameInfo.totalPrize) - platformFee;
+        setResultMessage(`🎉 Correct! You won ${winnerPrize.toString()} ETH!`);
         setShowResult(true);
         setGameData(updatedGameInfo);
         setTimeout(() => {

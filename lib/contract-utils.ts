@@ -400,9 +400,12 @@ export class ContractService {
       });
       console.log('📋 Transaction hash:', hash);
 
-      // Wait for transaction to be mined
+      // Wait for transaction to be mined with confirmations
       console.log('⏳ Waiting for transaction confirmation...');
-      const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+      const receipt = await this.publicClient.waitForTransactionReceipt({ 
+        hash,
+        confirmations: 2 // Wait for 2 block confirmations to ensure state is propagated
+      });
       console.log('✅ Transaction confirmed:', receipt);
       console.log('🎉 Guess submitted successfully!');
     } catch (error: any) {
