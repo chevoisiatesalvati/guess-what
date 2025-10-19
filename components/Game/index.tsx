@@ -111,7 +111,11 @@ export default function Game() {
       setIsSubmittingGuess(true);
       console.log(`🎯 Submitting guess: ${guess}`);
       
-      await submitContractGuess(gameId, guess, gameData.entryFee);
+      // Convert guess to lowercase for case-insensitive comparison
+      const normalizedGuess = guess.trim().toLowerCase();
+      console.log(`📝 Normalized guess: ${normalizedGuess}`);
+      
+      await submitContractGuess(gameId, normalizedGuess, gameData.entryFee);
       
       // Check if the guess was correct by refreshing game data
       const updatedGameInfo = await getGameInfo(gameId);

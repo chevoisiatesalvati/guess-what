@@ -58,10 +58,11 @@ export default function AdminPage() {
     setSuccessMessage('');
 
     try {
+      // Convert all words to lowercase for case-insensitive comparison
       const gameId = await createGame(
-        formData.topWord,
-        formData.middleWord,
-        formData.bottomWord,
+        formData.topWord.trim().toLowerCase(),
+        formData.middleWord.trim().toLowerCase(),
+        formData.bottomWord.trim().toLowerCase(),
         formData.entryFee,
         formData.initialPrizePool
       );
