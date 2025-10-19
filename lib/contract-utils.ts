@@ -1,7 +1,12 @@
 import { createPublicClient, http, parseEther, formatEther, decodeEventLog, type Address } from 'viem';
-import { base, baseSepolia } from 'viem/chains';
 import { getWalletClient } from 'wagmi/actions';
 import { config } from '@/contexts/miniapp-wallet-context';
+import { 
+  getCurrentChain, 
+  getCurrentChainId, 
+  getCurrentContractAddress,
+  getCurrentChainName 
+} from '@/lib/network-config';
 
 export interface ContractConfig {
   address: string;
@@ -218,12 +223,6 @@ export const GUESS_WHAT_GAME_ABI = [
   }
 ] as const;
 
-// Contract addresses (to be updated after deployment)
-export const CONTRACT_ADDRESSES = {
-  [base.id]: '0x0000000000000000000000000000000000000000', // Update after mainnet deployment
-  [baseSepolia.id]: '0xFcfF1b2Ba3859E7F65F59bA43799Afa3BeDB45b0',
-} as const;
-
 export class ContractService {
   private publicClient: any = null;
   private contractAddress: Address | null = null;
@@ -234,14 +233,18 @@ export class ContractService {
 
   private initializeClients() {
     if (typeof window !== 'undefined') {
-      // Create public client for read operations
+      // Create public client for read operations using current environment's chain
+      const currentChain = getCurrentChain();
       this.publicClient = createPublicClient({
-        chain: baseSepolia,
+        chain: currentChain,
         transport: http()
       });
 
-      // Set contract address based on current chain
-      this.contractAddress = CONTRACT_ADDRESSES[baseSepolia.id] as Address;
+      // Set contract address based on current environment
+      this.contractAddress = getCurrentContractAddress();
+      
+      console.log(`🌐 Initialized contract on ${getCurrentChainName()} (Chain ID: ${getCurrentChainId()})`);
+      console.log(`📍 Contract address: ${this.contractAddress}`);
     }
   }
 
@@ -254,7 +257,8 @@ export class ContractService {
   }
 
   private getContractAddress(chainId: number): Address | null {
-    return CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES] as Address || null;
+    // This method is kept for compatibility but now uses the centralized config
+    return getCurrentContractAddress();
   }
 
   async createGame(
@@ -510,11 +514,14 @@ export class ContractService {
 
   async switchToBaseNetwork(): Promise<void> {
     const walletClient = await this.getWalletClient();
+    const targetChainId = getCurrentChainId();
+    const chainName = getCurrentChainName();
     
     try {
-      await walletClient.switchChain({ id: baseSepolia.id });
+      await walletClient.switchChain({ id: targetChainId });
+      console.log(`✅ Switched to ${chainName} network`);
     } catch (error: any) {
-      throw new Error(`Failed to switch to Base Sepolia network: ${error.message}`);
+      throw new Error(`Failed to switch to ${chainName} network: ${error.message}`);
     }
   }
 
