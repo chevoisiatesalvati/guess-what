@@ -1,7 +1,7 @@
-import type { MiniAppNotificationDetails } from "@farcaster/miniapp-sdk";
-import { redis } from "./redis";
+import type { MiniAppNotificationDetails } from '@farcaster/miniapp-sdk';
+import { redis } from './redis';
 
-const notificationServiceKey = "farcaster:miniapp";
+const notificationServiceKey = 'farcaster:miniapp';
 
 function getUserNotificationDetailsKey(fid: number): string {
   return `${notificationServiceKey}:user:${fid}`;

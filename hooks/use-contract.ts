@@ -173,14 +173,17 @@ export const useContract = () => {
     }
   }, []);
 
-  const isGameAvailable = useCallback(async (gameId: number): Promise<boolean> => {
-    try {
-      return await contractService.isGameAvailable(gameId);
-    } catch (err: any) {
-      setError(err.message || 'Failed to check game availability');
-      return false;
-    }
-  }, []);
+  const isGameAvailable = useCallback(
+    async (gameId: number): Promise<boolean> => {
+      try {
+        return await contractService.isGameAvailable(gameId);
+      } catch (err: any) {
+        setError(err.message || 'Failed to check game availability');
+        return false;
+      }
+    },
+    []
+  );
 
   const getRandomActiveGame = useCallback(async (): Promise<number> => {
     try {
@@ -241,19 +244,22 @@ export const useContract = () => {
     }
   }, []);
 
-  const removeAdmin = useCallback(async (adminAddress: string): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
+  const removeAdmin = useCallback(
+    async (adminAddress: string): Promise<void> => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      await contractService.removeAdmin(adminAddress);
-    } catch (err: any) {
-      setError(err.message || 'Failed to remove admin');
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+      try {
+        await contractService.removeAdmin(adminAddress);
+      } catch (err: any) {
+        setError(err.message || 'Failed to remove admin');
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   const getAdminList = useCallback(async (): Promise<string[]> => {
     try {

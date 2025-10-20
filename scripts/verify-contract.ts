@@ -27,4 +27,3 @@ try {
   console.error('❌ Verification failed:', error.message);
   process.exit(1);
 }
-

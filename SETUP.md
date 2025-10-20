@@ -123,19 +123,16 @@ npm run dev
 ### Key Components
 
 1. **Game Component** (`components/Game/index.tsx`)
-
    - Main game interface
    - Mobile-optimized UI
    - Real-time updates
 
 2. **Game Context** (`contexts/game-context.tsx`)
-
    - Game state management
    - Player statistics
    - Timer functionality
 
 3. **Contract Integration** (`hooks/use-contract.ts`)
-
    - Smart contract interactions
    - Transaction handling
    - Network management
@@ -180,13 +177,11 @@ npm test
 ### Common Issues
 
 1. **Wallet Connection Issues**
-
    - Ensure MetaMask is installed
    - Check if Base network is added
    - Verify wallet has ETH for gas fees
 
 2. **Contract Interaction Errors**
-
    - Check contract address is correct
    - Ensure sufficient ETH for transactions
    - Verify network is Base

@@ -75,8 +75,8 @@ export const UserProvider = ({
   }>({
     url: '/api/auth/sign-in',
     method: 'POST',
-    body: (variables) => variables,
-    onSuccess: (data) => {
+    body: variables => variables,
+    onSuccess: data => {
       setIsSignedIn(true);
       setIsLoading(false);
       refetchUser();

@@ -95,4 +95,3 @@ export function isProduction(): boolean {
 export function isDevelopment(): boolean {
   return env.NEXT_PUBLIC_APP_ENV === 'development';
 }
-

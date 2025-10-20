@@ -1,5 +1,5 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod";
+import { createEnv } from '@t3-oss/env-nextjs';
+import { z } from 'zod';
 
 // https://env.t3.gg/docs/nextjs
 export const env = createEnv({
@@ -12,9 +12,9 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_URL: z.string().min(1),
     NEXT_PUBLIC_APP_ENV: z
-      .enum(["development", "production"])
+      .enum(['development', 'production'])
       .optional()
-      .default("development"),
+      .default('development'),
     NEXT_PUBLIC_FARCASTER_HEADER: z.string().min(1),
     NEXT_PUBLIC_FARCASTER_PAYLOAD: z.string().min(1),
     NEXT_PUBLIC_FARCASTER_SIGNATURE: z.string().min(1),
@@ -26,7 +26,8 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
     NEXT_PUBLIC_FARCASTER_HEADER: process.env.NEXT_PUBLIC_FARCASTER_HEADER,
     NEXT_PUBLIC_FARCASTER_PAYLOAD: process.env.NEXT_PUBLIC_FARCASTER_PAYLOAD,
-    NEXT_PUBLIC_FARCASTER_SIGNATURE: process.env.NEXT_PUBLIC_FARCASTER_SIGNATURE,
+    NEXT_PUBLIC_FARCASTER_SIGNATURE:
+      process.env.NEXT_PUBLIC_FARCASTER_SIGNATURE,
     NEXT_PUBLIC_ADMIN_ADDRESS: process.env.NEXT_PUBLIC_ADMIN_ADDRESS,
   },
 });

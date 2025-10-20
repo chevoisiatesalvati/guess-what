@@ -42,7 +42,7 @@ export default function Game() {
       try {
         setIsLoadingGame(true);
         const count = await getActiveGamesCount();
-        
+
         if (count === 0) {
           setIsLoadingGame(false);
           return;
@@ -51,11 +51,11 @@ export default function Game() {
         // Get a random active game
         const randomGameId = await getRandomActiveGame();
         console.log(`🎲 Loaded random game ID: ${randomGameId}`);
-        
+
         // Fetch game data
         const gameInfo = await getGameInfo(randomGameId);
         console.log('📊 Game info:', gameInfo);
-        
+
         setGameId(randomGameId);
         setGameData(gameInfo);
 
@@ -73,7 +73,14 @@ export default function Game() {
     };
 
     loadGame();
-  }, [isConnected, address, getActiveGamesCount, getRandomActiveGame, getGameInfo, isPlayerInGame]);
+  }, [
+    isConnected,
+    address,
+    getActiveGamesCount,
+    getRandomActiveGame,
+    getGameInfo,
+    isPlayerInGame,
+  ]);
 
   const handleJoinGame = async () => {
     if (!gameId || !gameData || !isConnected) {
@@ -81,9 +88,11 @@ export default function Game() {
     }
 
     try {
-      console.log(`💰 Joining game ${gameId} with entry fee ${gameData.entryFee} ETH`);
+      console.log(
+        `💰 Joining game ${gameId} with entry fee ${gameData.entryFee} ETH`
+      );
       await joinContractGame(gameId, gameData.entryFee);
-      
+
       setHasJoined(true);
       setResultMessage(`Successfully joined game ${gameId}!`);
       setShowResult(true);
@@ -102,7 +111,7 @@ export default function Game() {
 
   const handleGuessSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!guess.trim() || !gameId || !hasJoined) {
       return;
     }
@@ -110,22 +119,23 @@ export default function Game() {
     try {
       setIsSubmittingGuess(true);
       console.log(`🎯 Submitting guess: ${guess}`);
-      
+
       // Convert guess to lowercase for case-insensitive comparison
       const normalizedGuess = guess.trim().toLowerCase();
       console.log(`📝 Normalized guess: ${normalizedGuess}`);
-      
+
       await submitContractGuess(gameId, normalizedGuess, gameData.entryFee);
-      
+
       // Transaction is now confirmed with 2 block confirmations
       // Check if the guess was correct by refreshing game data
       const updatedGameInfo = await getGameInfo(gameId);
       console.log('📊 Updated game info:', updatedGameInfo);
-      
+
       if (!updatedGameInfo.isActive) {
         // Game ended - player won!
         const platformFee = parseFloat(updatedGameInfo.totalPrize) * 0.05;
-        const winnerPrize = parseFloat(updatedGameInfo.totalPrize) - platformFee;
+        const winnerPrize =
+          parseFloat(updatedGameInfo.totalPrize) - platformFee;
         setResultMessage(`🎉 Correct! You won ${winnerPrize.toString()} ETH!`);
         setShowResult(true);
         setGameData(updatedGameInfo);
@@ -134,12 +144,14 @@ export default function Game() {
         }, 5000);
       } else {
         // Incorrect guess
-        setResultMessage('❌ Incorrect guess. Try again! (costs 1 entry fee per guess)');
+        setResultMessage(
+          '❌ Incorrect guess. Try again! (costs 1 entry fee per guess)'
+        );
         setShowResult(true);
         setGameData(updatedGameInfo);
         setTimeout(() => setShowResult(false), 3000);
       }
-      
+
       setGuess('');
     } catch (error: any) {
       console.error('❌ Failed to submit guess:', error);
@@ -154,10 +166,10 @@ export default function Game() {
   // Loading state
   if (isLoadingGame) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-700">Loading game...</p>
+      <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4'>
+        <div className='bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4'></div>
+          <p className='text-gray-700'>Loading game...</p>
         </div>
       </div>
     );
@@ -166,28 +178,28 @@ export default function Game() {
   // No wallet connected state
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div className="mb-8">
-            <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl font-bold text-white">G</span>
+      <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4'>
+        <div className='bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center'>
+          <div className='mb-8'>
+            <div className='w-20 h-20 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4'>
+              <span className='text-3xl font-bold text-white'>G</span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className='text-3xl font-bold text-gray-900 mb-2'>
               Connect Wallet
             </h1>
-            <p className="text-gray-600">Connect your wallet to play!</p>
+            <p className='text-gray-600'>Connect your wallet to play!</p>
           </div>
 
           <button
             onClick={switchToBaseNetwork}
-            className="w-full bg-yellow-600 text-white font-medium py-4 px-4 rounded-lg hover:bg-yellow-700 transition-colors mb-4"
+            className='w-full bg-yellow-600 text-white font-medium py-4 px-4 rounded-lg hover:bg-yellow-700 transition-colors mb-4'
           >
             Connect Wallet & Switch to Base
           </button>
 
           <button
             onClick={() => router.push('/')}
-            className="w-full bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+            className='w-full bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors'
           >
             ← Back to Home
           </button>
@@ -199,21 +211,23 @@ export default function Game() {
   // No game available state
   if (!gameId || !gameData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-          <div className="mb-8">
-            <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl font-bold text-white">G</span>
+      <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4'>
+        <div className='bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center'>
+          <div className='mb-8'>
+            <div className='w-20 h-20 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4'>
+              <span className='text-3xl font-bold text-white'>G</span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className='text-3xl font-bold text-gray-900 mb-2'>
               No Active Games
             </h1>
-            <p className="text-gray-600">No games available right now. Check back later!</p>
+            <p className='text-gray-600'>
+              No games available right now. Check back later!
+            </p>
           </div>
 
           <button
             onClick={() => router.push('/')}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            className='w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105'
           >
             ← Back to Home
           </button>
@@ -225,45 +239,57 @@ export default function Game() {
   // Game lobby - before joining
   if (!hasJoined) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+      <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4'>
+        <div className='bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full'>
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl font-bold text-white">G</span>
+          <div className='text-center mb-8'>
+            <div className='w-20 h-20 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4'>
+              <span className='text-3xl font-bold text-white'>G</span>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className='text-3xl font-bold text-gray-900 mb-2'>
               Game #{gameId}
             </h1>
-            <p className="text-gray-600">Join to reveal the words!</p>
+            <p className='text-gray-600'>Join to reveal the words!</p>
           </div>
 
           {/* Game Info */}
-          <div className="space-y-4 mb-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600 mb-1">Entry Fee</div>
-              <div className="text-2xl font-bold text-blue-600">{gameData.entryFee} ETH</div>
-            </div>
-            
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600 mb-1">Current Prize Pool</div>
-              <div className="text-2xl font-bold text-green-600">{gameData.totalPrize} ETH</div>
+          <div className='space-y-4 mb-6'>
+            <div className='bg-blue-50 p-4 rounded-lg'>
+              <div className='text-sm text-gray-600 mb-1'>Entry Fee</div>
+              <div className='text-2xl font-bold text-blue-600'>
+                {gameData.entryFee} ETH
+              </div>
             </div>
 
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600 mb-1">Initial Prize Pool</div>
-              <div className="text-2xl font-bold text-purple-600">{gameData.initialPrizePool} ETH</div>
+            <div className='bg-green-50 p-4 rounded-lg'>
+              <div className='text-sm text-gray-600 mb-1'>
+                Current Prize Pool
+              </div>
+              <div className='text-2xl font-bold text-green-600'>
+                {gameData.totalPrize} ETH
+              </div>
+            </div>
+
+            <div className='bg-purple-50 p-4 rounded-lg'>
+              <div className='text-sm text-gray-600 mb-1'>
+                Initial Prize Pool
+              </div>
+              <div className='text-2xl font-bold text-purple-600'>
+                {gameData.initialPrizePool} ETH
+              </div>
             </div>
           </div>
 
           {/* Hidden Words Preview */}
-          <div className="bg-gray-100 p-6 rounded-lg mb-6">
-            <div className="text-center">
-              <div className="text-sm text-gray-600 mb-3">Words are hidden until you join</div>
-              <div className="space-y-3">
-                <div className="bg-gray-300 h-12 rounded-lg animate-pulse"></div>
-                <div className="bg-purple-300 h-16 rounded-lg animate-pulse"></div>
-                <div className="bg-gray-300 h-12 rounded-lg animate-pulse"></div>
+          <div className='bg-gray-100 p-6 rounded-lg mb-6'>
+            <div className='text-center'>
+              <div className='text-sm text-gray-600 mb-3'>
+                Words are hidden until you join
+              </div>
+              <div className='space-y-3'>
+                <div className='bg-gray-300 h-12 rounded-lg animate-pulse'></div>
+                <div className='bg-purple-300 h-16 rounded-lg animate-pulse'></div>
+                <div className='bg-gray-300 h-12 rounded-lg animate-pulse'></div>
               </div>
             </div>
           </div>
@@ -272,18 +298,22 @@ export default function Game() {
           <button
             onClick={handleJoinGame}
             disabled={contractLoading}
-            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mb-4"
+            className='w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mb-4'
           >
-            {contractLoading ? 'Joining...' : `Join Game (${gameData.entryFee} ETH)`}
+            {contractLoading
+              ? 'Joining...'
+              : `Join Game (${gameData.entryFee} ETH)`}
           </button>
 
           {/* Error/Success Message */}
           {showResult && (
-            <div className={`mb-4 p-4 rounded-lg ${
-              resultMessage.includes('Success') 
-                ? 'bg-green-50 text-green-800' 
-                : 'bg-red-50 text-red-800'
-            }`}>
+            <div
+              className={`mb-4 p-4 rounded-lg ${
+                resultMessage.includes('Success')
+                  ? 'bg-green-50 text-green-800'
+                  : 'bg-red-50 text-red-800'
+              }`}
+            >
               {resultMessage}
             </div>
           )}
@@ -291,7 +321,7 @@ export default function Game() {
           {/* Back Button */}
           <button
             onClick={() => router.push('/')}
-            className="w-full bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-200 transition-colors"
+            className='w-full bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-200 transition-colors'
           >
             ← Back to Home
           </button>
@@ -302,44 +332,44 @@ export default function Game() {
 
   // Main game interface - after joining
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 p-4">
-      <div className="max-w-md mx-auto">
+    <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 p-4'>
+      <div className='max-w-md mx-auto'>
         {/* Header */}
-        <div className="bg-white rounded-t-2xl p-6 text-center">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-gray-600">
-              Game #{gameId}
-            </div>
-            <div className="text-sm text-gray-600">
+        <div className='bg-white rounded-t-2xl p-6 text-center'>
+          <div className='flex items-center justify-between mb-4'>
+            <div className='text-sm text-gray-600'>Game #{gameId}</div>
+            <div className='text-sm text-gray-600'>
               Prize: {gameData.totalPrize} ETH
             </div>
           </div>
 
-          <div className="text-sm text-gray-600">
+          <div className='text-sm text-gray-600'>
             Entry Fee: {gameData.entryFee} ETH per guess
           </div>
         </div>
 
         {/* Game Board */}
-        <div className="bg-white p-6">
+        <div className='bg-white p-6'>
           {/* Top Word */}
-          <div className="text-center mb-4">
-            <div className="text-2xl font-bold text-gray-900 bg-gray-100 py-3 px-6 rounded-lg">
+          <div className='text-center mb-4'>
+            <div className='text-2xl font-bold text-gray-900 bg-gray-100 py-3 px-6 rounded-lg'>
               {gameData.topWord.toUpperCase()}
             </div>
           </div>
 
           {/* Middle Word (Hidden) */}
-          <div className="text-center mb-4">
-            <div className="text-3xl font-bold text-purple-600 bg-purple-100 py-4 px-6 rounded-lg border-2 border-purple-300">
+          <div className='text-center mb-4'>
+            <div className='text-3xl font-bold text-purple-600 bg-purple-100 py-4 px-6 rounded-lg border-2 border-purple-300'>
               {'?'.repeat(gameData.middleWord.length)}
             </div>
-            <div className="text-sm text-gray-500 mt-2">Guess the word ({gameData.middleWord.length} letters)</div>
+            <div className='text-sm text-gray-500 mt-2'>
+              Guess the word ({gameData.middleWord.length} letters)
+            </div>
           </div>
 
           {/* Bottom Word */}
-          <div className="text-center mb-6">
-            <div className="text-2xl font-bold text-gray-900 bg-gray-100 py-3 px-6 rounded-lg">
+          <div className='text-center mb-6'>
+            <div className='text-2xl font-bold text-gray-900 bg-gray-100 py-3 px-6 rounded-lg'>
               {gameData.bottomWord.toUpperCase()}
             </div>
           </div>
@@ -348,52 +378,58 @@ export default function Game() {
           {showResult && (
             <div
               className={`text-center py-4 px-6 rounded-lg mb-4 ${
-                resultMessage.includes('Correct') || resultMessage.includes('won')
+                resultMessage.includes('Correct') ||
+                resultMessage.includes('won')
                   ? 'bg-green-100 text-green-800 border-2 border-green-300'
                   : 'bg-red-100 text-red-800 border-2 border-red-300'
               }`}
             >
-              <div className="font-bold text-lg">{resultMessage}</div>
+              <div className='font-bold text-lg'>{resultMessage}</div>
             </div>
           )}
 
           {/* Input Form */}
-          <form onSubmit={handleGuessSubmit} className="space-y-4">
+          <form onSubmit={handleGuessSubmit} className='space-y-4'>
             <div>
               <input
-                type="text"
+                type='text'
                 value={guess}
-                onChange={(e) => setGuess(e.target.value)}
-                placeholder="Type your guess here..."
-                className="w-full text-center text-xl font-semibold py-4 px-6 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 text-gray-900 placeholder-gray-500"
+                onChange={e => setGuess(e.target.value)}
+                placeholder='Type your guess here...'
+                className='w-full text-center text-xl font-semibold py-4 px-6 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 text-gray-900 placeholder-gray-500'
                 disabled={isSubmittingGuess || !gameData.isActive}
-                autoComplete="off"
-                autoCapitalize="off"
-                autoCorrect="off"
-                spellCheck="false"
+                autoComplete='off'
+                autoCapitalize='off'
+                autoCorrect='off'
+                spellCheck='false'
               />
             </div>
 
             <button
-              type="submit"
-              disabled={isSubmittingGuess || !guess.trim() || !gameData.isActive}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              type='submit'
+              disabled={
+                isSubmittingGuess || !guess.trim() || !gameData.isActive
+              }
+              className='w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
             >
-              {isSubmittingGuess ? 'Submitting...' : `Submit Guess (${gameData.entryFee} ETH)`}
+              {isSubmittingGuess
+                ? 'Submitting...'
+                : `Submit Guess (${gameData.entryFee} ETH)`}
             </button>
           </form>
 
           {/* Info */}
-          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="text-sm text-yellow-800 text-center">
-              💡 Each guess costs {gameData.entryFee} ETH. Keep guessing until you get it right!
+          <div className='mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg'>
+            <div className='text-sm text-yellow-800 text-center'>
+              💡 Each guess costs {gameData.entryFee} ETH. Keep guessing until
+              you get it right!
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="bg-white rounded-b-2xl p-4 text-center">
-          <div className="text-sm text-gray-600">
+        <div className='bg-white rounded-b-2xl p-4 text-center'>
+          <div className='text-sm text-gray-600'>
             Be the first to guess correctly and win the prize!
           </div>
         </div>

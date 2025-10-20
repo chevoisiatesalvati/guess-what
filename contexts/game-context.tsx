@@ -85,7 +85,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
       const isCorrect = validateGuess(guess, currentGame.words.middle);
       const timeElapsed = (Date.now() - currentGame.timeStarted) / 1000;
 
-      setCurrentGame((prev) =>
+      setCurrentGame(prev =>
         prev
           ? {
               ...prev,
@@ -102,7 +102,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
         );
         const totalPrize = currentGame.totalPrize + bonus;
 
-        setPlayerStats((prev) => ({
+        setPlayerStats(prev => ({
           ...prev,
           gamesPlayed: prev.gamesPlayed + 1,
           correctGuesses: prev.correctGuesses + 1,
@@ -124,7 +124,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
         // Player lost, add entry fee to total prize
         const newTotalPrize = currentGame.totalPrize + currentGame.entryFee;
 
-        setCurrentGame((prev) =>
+        setCurrentGame(prev =>
           prev
             ? {
                 ...prev,
@@ -133,7 +133,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
             : null
         );
 
-        setPlayerStats((prev) => ({
+        setPlayerStats(prev => ({
           ...prev,
           gamesPlayed: prev.gamesPlayed + 1,
           accuracy: (prev.correctGuesses / (prev.gamesPlayed + 1)) * 100,
@@ -151,7 +151,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
 
   const endGame = useCallback(() => {
     if (currentGame) {
-      setCurrentGame((prev) =>
+      setCurrentGame(prev =>
         prev
           ? {
               ...prev,

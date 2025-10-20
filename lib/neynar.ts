@@ -1,4 +1,4 @@
-import { env } from "@/lib/env";
+import { env } from '@/lib/env';
 
 export interface NeynarUser {
   fid: string;
@@ -14,16 +14,16 @@ export const fetchUser = async (fid: string): Promise<NeynarUser> => {
     `https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`,
     {
       headers: {
-        "x-api-key": env.NEYNAR_API_KEY!,
+        'x-api-key': env.NEYNAR_API_KEY!,
       },
     }
   );
   if (!response.ok) {
     console.error(
-      "Failed to fetch Farcaster user on Neynar",
+      'Failed to fetch Farcaster user on Neynar',
       await response.json()
     );
-    throw new Error("Failed to fetch Farcaster user on Neynar");
+    throw new Error('Failed to fetch Farcaster user on Neynar');
   }
   const data = await response.json();
   return data.users[0];
