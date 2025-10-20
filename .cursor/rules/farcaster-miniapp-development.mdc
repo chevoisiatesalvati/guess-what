@@ -1,0 +1,173 @@
+---
+alwaysApply: true
+---
+
+# Farcaster Mini-App Development Guidelines
+
+When developing this Farcaster mini-app, always follow these viral growth principles to maximize engagement and social sharing:
+
+## 🎯 Core Philosophy
+
+- Keep it simple, snappy, and fun - mini-apps are mini for a reason
+- The magic comes from social dynamics, not complexity
+- Every interaction should be designed to trigger the next user
+
+## 🔗 Social-First Design
+
+- Leverage Farcaster social graph to pre-fill friends and connections
+- Pull in usernames, avatars, and bios from FC profiles
+- Add leaderboards, badges, and stats - competition fuels engagement
+- Show activity feeds: "your friends just did X"
+- Think multiplayer, even for solo experiences - show people with people
+- Highlight who did what inside the app (recent activity, "top player," etc)
+
+## 📤 Shareability & Virality
+
+- Add "Share to Warpcast" buttons at key moments (game scores, achievements, leaderboard positions)
+- Auto-compose cast text with fun copy + a link to your mini-app
+- Avoid auto-tagging users in prefilled text – it might feel spammy
+- Embed the mini-app URL in the cast
+- Use Open Graph tags to generate custom preview images for embeds
+- Customize preview images with dynamic data (e.g., "Castled with 4 friends" or "@alice scored 91 points")
+- Make preview images eye-catching and legible in small format
+- Include social proof directly in the preview (avatars of active users, usage stats)
+
+## 🚪 User Experience & Onboarding
+
+- Users open your app and are automatically signed in
+- Support deep linking with context (invite URLs, challenge links)
+- Let users bring friends - share links that invite them into specific rooms/games/sessions
+- Autofill names and avatars from Farcaster so onboarding feels instant
+- Make it easy to jump in - minimize friction
+
+## 🏆 Rewards & Gamification
+
+- Let people earn or collect things while using it (badges, early access)
+- Show who brought in new users (referral vibes, but social)
+- Reward people for casting your mini-app
+- Use protocol data and URL parsing to track sharing rewards
+
+## 🔄 Engagement Loops
+
+- **Interact → get feedback → share → bring others in → repeat**
+- If someone uses your app and no one else knows, you failed
+- Think of every click as a chance to trigger the next user
+- Keep the loop tight and engaging
+
+## 🔔 Notifications Strategy
+
+- Use Farcaster notifications to re-engage users where they already hang out
+- **Broadcast Notifications:** New features, time-limited events, community milestones
+- **Async & Delayed Notifications:** Leaderboard changes, replies, daily rewards
+- **Social Triggers:** Friend interactions, follower activity
+- Trigger "Add Frame" action early but be mindful not to spam
+- Use notifications thoughtfully - deliver real value, spark curiosity, or tap into social FOMO
+
+## 🚀 Launch Strategy
+
+- Add referral or pre-save system before going live
+- Reward early signups with perks, badges, or access
+- Use Warpcast notifications to bring pre-savers back when app is live
+- Launch with challenges or leaderboards to fuel early engagement
+
+## 🎨 Technical Implementation
+
+- Always consider social features when building components
+- Implement sharing mechanisms at key interaction points
+- Design for feed virality in all UI decisions
+- Use Farcaster context for seamless user experience
+- Build notification triggers into user flows
+- Create shareable moments throughout the user journey
+
+## ⚠️ Important Notes
+
+- Be mindful not to spam with notifications
+- Avoid auto-tagging users in prefilled text
+- Focus on organic sharing over forced promotion
+- Every feature should have a social component
+- Design for the feed - that's where new users discover your app
+
+# Farcaster Mini-App Development Guidelines
+
+When developing this Farcaster mini-app, always follow these viral growth principles to maximize engagement and social sharing:
+
+## 🎯 Core Philosophy
+
+- Keep it simple, snappy, and fun - mini-apps are mini for a reason
+- The magic comes from social dynamics, not complexity
+- Every interaction should be designed to trigger the next user
+
+## 🔗 Social-First Design
+
+- Leverage Farcaster social graph to pre-fill friends and connections
+- Pull in usernames, avatars, and bios from FC profiles
+- Add leaderboards, badges, and stats - competition fuels engagement
+- Show activity feeds: "your friends just did X"
+- Think multiplayer, even for solo experiences - show people with people
+- Highlight who did what inside the app (recent activity, "top player," etc)
+
+## 📤 Shareability & Virality
+
+- Add "Share to Warpcast" buttons at key moments (game scores, achievements, leaderboard positions)
+- Auto-compose cast text with fun copy + a link to your mini-app
+- Avoid auto-tagging users in prefilled text – it might feel spammy
+- Embed the mini-app URL in the cast
+- Use Open Graph tags to generate custom preview images for embeds
+- Customize preview images with dynamic data (e.g., "Castled with 4 friends" or "@alice scored 91 points")
+- Make preview images eye-catching and legible in small format
+- Include social proof directly in the preview (avatars of active users, usage stats)
+
+## 🚪 User Experience & Onboarding
+
+- Users open your app and are automatically signed in
+- Support deep linking with context (invite URLs, challenge links)
+- Let users bring friends - share links that invite them into specific rooms/games/sessions
+- Autofill names and avatars from Farcaster so onboarding feels instant
+- Make it easy to jump in - minimize friction
+
+## 🏆 Rewards & Gamification
+
+- Let people earn or collect things while using it (badges, early access)
+- Show who brought in new users (referral vibes, but social)
+- Reward people for casting your mini-app
+- Use protocol data and URL parsing to track sharing rewards
+
+## 🔄 Engagement Loops
+
+- **Interact → get feedback → share → bring others in → repeat**
+- If someone uses your app and no one else knows, you failed
+- Think of every click as a chance to trigger the next user
+- Keep the loop tight and engaging
+
+## 🔔 Notifications Strategy
+
+- Use Farcaster notifications to re-engage users where they already hang out
+- **Broadcast Notifications:** New features, time-limited events, community milestones
+- **Async & Delayed Notifications:** Leaderboard changes, replies, daily rewards
+- **Social Triggers:** Friend interactions, follower activity
+- Trigger "Add Frame" action early but be mindful not to spam
+- Use notifications thoughtfully - deliver real value, spark curiosity, or tap into social FOMO
+
+## 🚀 Launch Strategy
+
+- Add referral or pre-save system before going live
+- Reward early signups with perks, badges, or access
+- Use Warpcast notifications to bring pre-savers back when app is live
+- Launch with challenges or leaderboards to fuel early engagement
+
+## 🎨 Technical Implementation
+
+- Always consider social features when building components
+- Implement sharing mechanisms at key interaction points
+- Design for feed virality in all UI decisions
+- Use Farcaster context for seamless user experience
+- Build notification triggers into user flows
+- Create shareable moments throughout the user journey
+
+## ⚠️ Important Notes
+
+- Be mindful not to spam with notifications
+- Avoid auto-tagging users in prefilled text
+- Focus on organic sharing over forced promotion
+- Every feature should have a social component
+- Design for the feed - that's where new users discover your app
