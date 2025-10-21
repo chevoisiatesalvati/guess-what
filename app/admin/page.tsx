@@ -76,6 +76,7 @@ export default function AdminPage() {
       const gameId = await createGame(
         normalizedTopWord,
         middleWordHash,
+        normalizedMiddleWord.length,
         normalizedBottomWord,
         formData.entryFee
       );

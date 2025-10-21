@@ -8,11 +8,12 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     struct Game {
         uint256 gameId;
         string topWord;
-        bytes32 middleWordHash; // SECURITY: Hashed instead of plaintext
+        bytes32 middleWordHash;
+        uint256 middleWordLength;
         string bottomWord;
         uint256 entryFee;
         uint256 totalPrize;
-        uint256 basePrizeAmount; // Base prize amount for winning (from treasury)
+        uint256 basePrizeAmount;
         uint256 startTime;
         bool isActive;
         bool isCompleted;
@@ -32,7 +33,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     // State variables
     uint256 public nextGameId = 1;
     uint256 public platformFeePercent = 5; // 5% default platform fee
-    uint256 public treasuryBalance; // Treasury for prize pools
+    uint256 public treasuryBalance;
     uint256 public defaultPrizeMultiplier = 10; // Base prize = entry fee * multiplier
     
     mapping(uint256 => Game) public games;
@@ -90,6 +91,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     function createGame(
         string memory _topWord,
         bytes32 _middleWordHash,
+        uint256 _middleWordLength,
         string memory _bottomWord,
         uint256 _entryFee
     ) external onlyAdmin returns (uint256) {
@@ -106,6 +108,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         game.gameId = gameId;
         game.topWord = _topWord;
         game.middleWordHash = _middleWordHash;
+        game.middleWordLength = _middleWordLength;
         game.bottomWord = _bottomWord;
         game.entryFee = _entryFee;
         game.basePrizeAmount = basePrize;
@@ -153,7 +156,6 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         // Store the latest guess
         game.playerGuesses[msg.sender] = _guess;
         
-        // SECURITY: Compare hash of guess with stored hash
         // This prevents reading the answer from contract storage
         if (keccak256(bytes(_guess)) == game.middleWordHash) {
             _endGame(_gameId, msg.sender);
@@ -207,8 +209,6 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         emit GameWon(_gameId, _winner, winnerPrize);
     }
 
-    // expireGame function removed - games don't expire
-
     function getGameInfo(uint256 _gameId) external view gameExists(_gameId) returns (
         uint256 gameId,
         string memory topWord,
@@ -223,12 +223,10 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         address winner
     ) {
         Game storage game = games[_gameId];
-        // SECURITY: Don't return the hash, only metadata
-        // Calculate middle word length from hash (not directly available, return 0 for now)
         return (
             game.gameId,
             game.topWord,
-            0, // middleWordLength - not available from hash
+            game.middleWordLength,
             game.bottomWord,
             game.entryFee,
             game.totalPrize,

@@ -1,6 +1,5 @@
 import {
   createPublicClient,
-  http,
   parseEther,
   formatEther,
   decodeEventLog,
@@ -77,6 +76,7 @@ export class ContractService {
   async createGame(
     topWord: string,
     middleWordHash: `0x${string}`,
+    middleWordLength: number,
     bottomWord: string,
     entryFee: string
   ): Promise<number> {
@@ -84,13 +84,6 @@ export class ContractService {
     console.log('📝 Words:', { topWord, middleWordHash, bottomWord });
     console.log('💰 Entry fee:', entryFee);
     console.log('📍 Contract address:', this.contractAddress);
-    // Chain info
-    console.log('🔍 Chain info:', {
-      currentChain: getCurrentChain(),
-      currentChainId: getCurrentChainId(),
-      currentChainName: getCurrentChainName(),
-      currentTransport: getCurrentTransport(),
-    });
 
     if (!this.contractAddress) {
       const error = 'Contract address not initialized';
@@ -111,7 +104,13 @@ export class ContractService {
         address: this.contractAddress,
         abi: GUESS_WHAT_GAME_ABI,
         functionName: 'createGame',
-        args: [topWord, middleWordHash, bottomWord, entryFeeWei],
+        args: [
+          topWord,
+          middleWordHash,
+          middleWordLength,
+          bottomWord,
+          entryFeeWei,
+        ],
         // No value needed - treasury-based system
       });
       console.log('📋 Transaction hash:', hash);
@@ -216,14 +215,21 @@ export class ContractService {
       args: [BigInt(gameId)],
     });
 
+    const basePrizeAmount = formatEther(info[6]);
+    const accumulatedPrize = formatEther(info[5]);
+    const totalPrize = (
+      parseFloat(basePrizeAmount) + parseFloat(accumulatedPrize)
+    ).toString();
+
     return {
       gameId: Number(info[0]),
       topWord: info[1],
       middleWordLength: Number(info[2]), // Changed from middleWord
       bottomWord: info[3],
       entryFee: formatEther(info[4]),
-      totalPrize: formatEther(info[5]),
-      basePrizeAmount: formatEther(info[6]), // Changed from initialPrizePool
+      totalPrize: totalPrize, // Calculated total prize (base + accumulated)
+      basePrizeAmount: basePrizeAmount, // Base prize from treasury
+      accumulatedPrize: accumulatedPrize, // Prize from wrong guesses
       startTime: Number(info[7]),
       isActive: info[8],
       isCompleted: info[9],

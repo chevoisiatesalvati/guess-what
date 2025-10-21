@@ -10,6 +10,7 @@ export interface ContractGameInfo {
   entryFee: string;
   totalPrize: string;
   basePrizeAmount: string; // Changed from initialPrizePool
+  accumulatedPrize: string; // Prize from wrong guesses
   startTime: number;
   isActive: boolean;
   isCompleted: boolean;
@@ -38,6 +39,7 @@ export const useContract = () => {
     async (
       topWord: string,
       middleWordHash: `0x${string}`,
+      middleWordLength: number,
       bottomWord: string,
       entryFee: string
     ): Promise<number> => {
@@ -48,6 +50,7 @@ export const useContract = () => {
         const gameId = await contractService.createGame(
           topWord,
           middleWordHash,
+          middleWordLength,
           bottomWord,
           entryFee
         );

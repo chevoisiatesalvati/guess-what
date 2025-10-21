@@ -1,12 +1,9 @@
 import { farcasterFrame as miniAppConnector } from '@farcaster/miniapp-wagmi-connector';
 import { createConfig, http } from 'wagmi';
-import { base, baseSepolia } from 'wagmi/chains';
 import {
   getCurrentChain,
   getCurrentChainId,
   getCurrentRpcUrl,
-  getSupportedChains,
-  RPC_URLS,
 } from '@/lib/network-config';
 
 // Get the current chain and RPC URL based on environment

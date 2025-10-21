@@ -99,7 +99,7 @@ export default function Game() {
         const platformFee = parseFloat(updatedGameInfo.totalPrize) * 0.05;
         const winnerPrize =
           parseFloat(updatedGameInfo.totalPrize) - platformFee;
-        setResultMessage(`🎉 Correct! You won ${winnerPrize.toString()} ETH!`);
+        setResultMessage(`🎉 Correct! You won ${winnerPrize.toFixed(4)} ETH!`);
         setShowResult(true);
         setGameData(updatedGameInfo);
         setTimeout(() => {
@@ -201,7 +201,7 @@ export default function Game() {
           <div className='flex items-center justify-between mb-4'>
             <div className='text-sm text-gray-600'>Game #{gameId}</div>
             <div className='text-sm text-gray-600'>
-              Prize: {gameData.totalPrize} ETH
+              Prize: {parseFloat(gameData.totalPrize).toFixed(4)} ETH
             </div>
           </div>
 
@@ -222,10 +222,10 @@ export default function Game() {
           {/* Middle Word (Hidden) */}
           <div className='text-center mb-4'>
             <div className='text-3xl font-bold text-purple-600 bg-purple-100 py-4 px-6 rounded-lg border-2 border-purple-300'>
-              ???
+              {'_'.repeat(gameData.middleWordLength)}
             </div>
             <div className='text-sm text-gray-500 mt-2'>
-              Guess the middle word
+              Guess the {gameData.middleWordLength}-letter word
             </div>
           </div>
 
