@@ -11,8 +11,8 @@
     "format:check": "prettier --check .",
     "frames": "frames",
     "compile": "hardhat compile",
-    "deploy:base-sepolia": "hardhat ignition deploy ignition/modules/GuessWhatGame.ts --network baseSepolia && npm run update-addresses",
-    "deploy:base": "hardhat ignition deploy ignition/modules/GuessWhatGame.ts --network base && npm run update-addresses",
+    "deploy:base-sepolia": "npm run compile && hardhat ignition deploy ignition/modules/GuessWhatGame.ts --network baseSepolia && npm run update-addresses",
+    "deploy:base": "npm run compile && hardhat ignition deploy ignition/modules/GuessWhatGame.ts --network base && npm run update-addresses",
     "verify:base-sepolia": "npx jiti scripts/verify-contract.ts baseSepolia",
     "verify:base": "npx jiti scripts/verify-contract.ts base",
     "update-addresses": "node scripts/update-contract-addresses.js"

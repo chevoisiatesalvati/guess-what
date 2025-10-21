@@ -19,7 +19,7 @@ const CHAIN_DEPLOYMENTS = {
 };
 
 function updateContractAddresses() {
-  console.log('🔄 Updating contract addresses from deployment files...');
+  console.log('🔄 Checking contract addresses from deployment files...');
 
   const networkConfigPath = path.join(
     __dirname,
@@ -30,6 +30,7 @@ function updateContractAddresses() {
   let networkConfig = fs.readFileSync(networkConfigPath, 'utf-8');
 
   let updated = false;
+  let skipped = 0;
 
   // Update addresses for each chain
   for (const [chainId, deploymentDir] of Object.entries(CHAIN_DEPLOYMENTS)) {
@@ -57,6 +58,21 @@ function updateContractAddresses() {
         // Update the address in the network config
         const chainName = chainId === '8453' ? 'base' : 'baseSepolia';
 
+        // Check if the address is already up-to-date
+        const currentAddressPattern = new RegExp(
+          `\\[${chainName}\\.id\\]: '([^']*)'`
+        );
+        const currentMatch = networkConfig.match(currentAddressPattern);
+        const currentAddress = currentMatch ? currentMatch[1] : null;
+
+        if (currentAddress === contractAddress) {
+          console.log(
+            `⏭️ Skipping ${chainName} - address already up to date (${contractAddress})`
+          );
+          skipped++;
+          continue;
+        }
+
         // Only update CONTRACT_ADDRESSES, not RPC_URLS
         const contractAddressPattern = new RegExp(
           `(CONTRACT_ADDRESSES = \\{[^}]*\\[${chainName}\\.id\\]: ')[^']*('.*?\\} as const;)`,
@@ -70,7 +86,9 @@ function updateContractAddresses() {
           );
           updated = true;
           console.log(
-            `✅ Updated ${chainName} contract address to ${contractAddress}`
+            `✅ Updated ${chainName} contract address from ${
+              currentAddress || 'unknown'
+            } to ${contractAddress}`
           );
         }
       } else {
@@ -84,6 +102,10 @@ function updateContractAddresses() {
   if (updated) {
     fs.writeFileSync(networkConfigPath, networkConfig);
     console.log('✅ Contract addresses updated successfully!');
+  } else if (skipped > 0) {
+    console.log(
+      `ℹ️ No updates needed - ${skipped} addresses already up to date`
+    );
   } else {
     console.log('ℹ️ No updates needed - addresses are already up to date');
   }
