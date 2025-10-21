@@ -4,16 +4,26 @@ import {
   parseEther,
   formatEther,
   decodeEventLog,
+  keccak256,
+  toBytes,
   type Address,
 } from 'viem';
 import { getWalletClient } from 'wagmi/actions';
-import { config } from '@/contexts/miniapp-wallet-context';
+import { config } from '@/lib/wagmi-config';
 import {
   getCurrentChain,
   getCurrentChainId,
   getCurrentContractAddress,
   getCurrentChainName,
+  getCurrentTransport,
 } from '@/lib/network-config';
+
+// Helper function to hash words for game creation
+export function hashWord(word: string): `0x${string}` {
+  // Normalize the word: lowercase and trim
+  const normalized = word.toLowerCase().trim();
+  return keccak256(toBytes(normalized));
+}
 
 export interface ContractConfig {
   address: string;
@@ -41,7 +51,7 @@ export class ContractService {
       const currentChain = getCurrentChain();
       this.publicClient = createPublicClient({
         chain: currentChain,
-        transport: http(),
+        transport: getCurrentTransport(),
       });
 
       // Set contract address based on current environment
@@ -62,22 +72,49 @@ export class ContractService {
     return walletClient;
   }
 
-  private getContractAddress(chainId: number): Address | null {
-    // This method is kept for compatibility but now uses the centralized config
-    return getCurrentContractAddress();
+  async ensureCorrectChain(): Promise<void> {
+    const walletClient = await this.getWalletClient();
+    const currentChain = getCurrentChain();
+
+    console.log('🔍 Checking wallet chain...');
+    console.log(
+      '🌐 Required chain:',
+      currentChain.name,
+      'ID:',
+      currentChain.id
+    );
+    console.log(
+      '👛 Wallet chain:',
+      walletClient.chain?.name,
+      'ID:',
+      walletClient.chain?.id
+    );
+
+    if (walletClient.chain?.id !== currentChain.id) {
+      console.log('🔄 Switching wallet to', currentChain.name);
+      try {
+        await walletClient.switchChain({ id: currentChain.id });
+        console.log('✅ Chain switched successfully to', currentChain.name);
+      } catch (error: any) {
+        console.error('❌ Failed to switch chain:', error);
+        throw new Error(
+          `Please switch your wallet to ${currentChain.name} (Chain ID: ${currentChain.id})`
+        );
+      }
+    } else {
+      console.log('✅ Wallet already on correct chain');
+    }
   }
 
   async createGame(
     topWord: string,
-    middleWord: string,
+    middleWordHash: `0x${string}`,
     bottomWord: string,
-    entryFee: string,
-    initialPrizePool: string
+    entryFee: string
   ): Promise<number> {
     console.log('🏗️ Creating contract game...');
-    console.log('📝 Words:', { topWord, middleWord, bottomWord });
+    console.log('📝 Words:', { topWord, middleWordHash, bottomWord });
     console.log('💰 Entry fee:', entryFee);
-    console.log('🏆 Initial prize pool:', initialPrizePool);
     console.log('📍 Contract address:', this.contractAddress);
 
     if (!this.contractAddress) {
@@ -87,22 +124,19 @@ export class ContractService {
     }
 
     const walletClient = await this.getWalletClient();
-    console.log('👛 Wallet client obtained');
-    console.log('Wallet client object:', walletClient);
 
     try {
       console.log('📤 Sending createGame transaction...');
 
       // Parse ETH values with high precision
       const entryFeeWei = parseEther(entryFee);
-      const prizePoolWei = parseEther(initialPrizePool);
 
       const hash = await walletClient.writeContract({
         address: this.contractAddress,
         abi: GUESS_WHAT_GAME_ABI,
         functionName: 'createGame',
-        args: [topWord, middleWord, bottomWord, entryFeeWei, prizePoolWei],
-        value: prizePoolWei, // Send ETH for the prize pool
+        args: [topWord, middleWordHash, bottomWord, entryFeeWei],
+        // No value needed - treasury-based system
       });
       console.log('📋 Transaction hash:', hash);
 
@@ -148,44 +182,7 @@ export class ContractService {
     }
   }
 
-  async joinGame(gameId: number, entryFee: string): Promise<void> {
-    console.log('🎯 Joining contract game...');
-    console.log('🆔 Game ID:', gameId);
-    console.log('💰 Entry fee:', entryFee);
-    console.log('📍 Contract address:', this.contractAddress);
-
-    if (!this.contractAddress) {
-      const error = 'Contract address not initialized';
-      console.error('❌', error);
-      throw new Error(error);
-    }
-
-    const walletClient = await this.getWalletClient();
-    console.log('👛 Wallet client obtained');
-
-    try {
-      console.log('📤 Sending joinGame transaction...');
-      const hash = await walletClient.writeContract({
-        address: this.contractAddress,
-        abi: GUESS_WHAT_GAME_ABI,
-        functionName: 'joinGame',
-        args: [BigInt(gameId)],
-        value: parseEther(entryFee),
-      });
-      console.log('📋 Transaction hash:', hash);
-
-      // Wait for transaction to be mined
-      console.log('⏳ Waiting for transaction confirmation...');
-      const receipt = await this.publicClient.waitForTransactionReceipt({
-        hash,
-      });
-      console.log('✅ Transaction confirmed:', receipt);
-      console.log('🎉 Successfully joined game!');
-    } catch (error: any) {
-      console.error('❌ Failed to join game:', error);
-      throw new Error(`Failed to join game: ${error.message}`);
-    }
-  }
+  // joinGame() removed - players auto-join on first submitGuess() for better UX
 
   async submitGuess(
     gameId: number,
@@ -205,7 +202,6 @@ export class ContractService {
     }
 
     const walletClient = await this.getWalletClient();
-    console.log('👛 Wallet client obtained');
 
     try {
       console.log('📤 Sending submitGuess transaction...');
@@ -247,11 +243,11 @@ export class ContractService {
     return {
       gameId: Number(info[0]),
       topWord: info[1],
-      middleWord: info[2],
+      middleWordLength: Number(info[2]), // Changed from middleWord
       bottomWord: info[3],
       entryFee: formatEther(info[4]),
       totalPrize: formatEther(info[5]),
-      initialPrizePool: formatEther(info[6]),
+      basePrizeAmount: formatEther(info[6]), // Changed from initialPrizePool
       startTime: Number(info[7]),
       isActive: info[8],
       isCompleted: info[9],
@@ -323,21 +319,6 @@ export class ContractService {
       functionName: 'getPlayerGuess',
       args: [BigInt(gameId), playerAddress as Address],
     });
-  }
-
-  async switchToBaseNetwork(): Promise<void> {
-    const walletClient = await this.getWalletClient();
-    const targetChainId = getCurrentChainId();
-    const chainName = getCurrentChainName();
-
-    try {
-      await walletClient.switchChain({ id: targetChainId });
-      console.log(`✅ Switched to ${chainName} network`);
-    } catch (error: any) {
-      throw new Error(
-        `Failed to switch to ${chainName} network: ${error.message}`
-      );
-    }
   }
 
   // Get the next game ID to check if there are any games available
@@ -536,6 +517,137 @@ export class ContractService {
 
     console.log('👑 Admin count:', Number(count));
     return Number(count);
+  }
+
+  // Treasury management functions
+  async fundTreasury(amount: string): Promise<void> {
+    if (!this.contractAddress) {
+      throw new Error('Contract address not initialized');
+    }
+
+    const walletClient = await this.getWalletClient();
+    console.log('💰 Wallet client:', walletClient);
+    console.log('💰 Funding treasury with', amount, 'ETH');
+
+    const hash = await walletClient.writeContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'fundTreasury',
+      value: parseEther(amount),
+    });
+
+    console.log('📋 Transaction hash:', hash);
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    console.log('✅ Treasury funded successfully:', receipt);
+  }
+
+  async getTreasuryBalance(): Promise<string> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    console.log('💰 Getting treasury balance...');
+    const balance = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'getTreasuryBalance',
+    });
+
+    const formatted = formatEther(balance as bigint);
+    console.log('💰 Treasury balance:', formatted, 'ETH');
+    return formatted;
+  }
+
+  async withdrawFromTreasury(amount: string): Promise<void> {
+    if (!this.contractAddress) {
+      throw new Error('Contract address not initialized');
+    }
+
+    const walletClient = await this.getWalletClient();
+    console.log('💰 Withdrawing from treasury:', amount, 'ETH');
+
+    const hash = await walletClient.writeContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'withdrawFromTreasury',
+      args: [parseEther(amount)],
+    });
+
+    console.log('📋 Transaction hash:', hash);
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    console.log('✅ Withdrawal successful:', receipt);
+  }
+
+  async getPrizeMultiplier(): Promise<number> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    console.log('🎯 Getting prize multiplier...');
+    const multiplier = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'defaultPrizeMultiplier',
+    });
+
+    console.log('🎯 Prize multiplier:', Number(multiplier));
+    return Number(multiplier);
+  }
+
+  async setPrizeMultiplier(multiplier: number): Promise<void> {
+    if (!this.contractAddress) {
+      throw new Error('Contract address not initialized');
+    }
+
+    const walletClient = await this.getWalletClient();
+    console.log('🎯 Setting prize multiplier to:', multiplier);
+
+    const hash = await walletClient.writeContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'setPrizeMultiplier',
+      args: [BigInt(multiplier)],
+    });
+
+    console.log('📋 Transaction hash:', hash);
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    console.log('✅ Multiplier updated successfully:', receipt);
+  }
+
+  async getPlatformFee(): Promise<number> {
+    if (!this.publicClient || !this.contractAddress) {
+      throw new Error('Public client or contract address not initialized');
+    }
+
+    console.log('💰 Getting platform fee...');
+    const fee = await this.publicClient.readContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'platformFeePercent',
+    });
+
+    console.log('💰 Platform fee:', Number(fee), '%');
+    return Number(fee);
+  }
+
+  async setPlatformFee(feePercent: number): Promise<void> {
+    if (!this.contractAddress) {
+      throw new Error('Contract address not initialized');
+    }
+
+    const walletClient = await this.getWalletClient();
+    console.log('💰 Setting platform fee to:', feePercent, '%');
+
+    const hash = await walletClient.writeContract({
+      address: this.contractAddress,
+      abi: GUESS_WHAT_GAME_ABI,
+      functionName: 'setPlatformFee',
+      args: [BigInt(feePercent)],
+    });
+
+    console.log('📋 Transaction hash:', hash);
+    const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    console.log('✅ Platform fee updated successfully:', receipt);
   }
 }
 

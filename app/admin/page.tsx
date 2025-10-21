@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useContract } from '@/hooks/use-contract';
+import { hashWord } from '@/lib/contract-utils';
 
 export default function AdminPage() {
   const { address, isConnected } = useAccount();
@@ -12,8 +13,7 @@ export default function AdminPage() {
     topWord: '',
     middleWord: '',
     bottomWord: '',
-    entryFee: '0.00000001',
-    initialPrizePool: '0.0000001',
+    entryFee: '0.0001',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,13 +58,26 @@ export default function AdminPage() {
     setSuccessMessage('');
 
     try {
-      // Convert all words to lowercase for case-insensitive comparison
+      // Normalize and hash the middle word for security
+      const normalizedTopWord = formData.topWord.trim().toLowerCase();
+      const normalizedMiddleWord = formData.middleWord.trim().toLowerCase();
+      const normalizedBottomWord = formData.bottomWord.trim().toLowerCase();
+
+      // Hash the middle word to prevent reading from contract storage
+      const middleWordHash = hashWord(normalizedMiddleWord);
+
+      console.log('🔐 Creating game with hashed middle word');
+      console.log('Words:', {
+        normalizedTopWord,
+        middleWordHash,
+        normalizedBottomWord,
+      });
+
       const gameId = await createGame(
-        formData.topWord.trim().toLowerCase(),
-        formData.middleWord.trim().toLowerCase(),
-        formData.bottomWord.trim().toLowerCase(),
-        formData.entryFee,
-        formData.initialPrizePool
+        normalizedTopWord,
+        middleWordHash,
+        normalizedBottomWord,
+        formData.entryFee
       );
 
       setSuccessMessage(`Game created successfully! Game ID: ${gameId}`);
@@ -74,8 +87,7 @@ export default function AdminPage() {
         topWord: '',
         middleWord: '',
         bottomWord: '',
-        entryFee: '0.00000001',
-        initialPrizePool: '0.0000001',
+        entryFee: '0.0001',
       });
     } catch (err: any) {
       console.error('Error creating game:', err);
@@ -214,46 +226,27 @@ export default function AdminPage() {
               />
             </div>
 
-            <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <label
-                  htmlFor='entryFee'
-                  className='block text-sm font-medium text-gray-700 mb-2'
-                >
-                  Entry Fee (ETH)
-                </label>
-                <input
-                  type='number'
-                  id='entryFee'
-                  name='entryFee'
-                  value={formData.entryFee}
-                  onChange={handleInputChange}
-                  required
-                  min='0.000000001'
-                  step='0.000000001'
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor='initialPrizePool'
-                  className='block text-sm font-medium text-gray-700 mb-2'
-                >
-                  Initial Prize Pool (ETH)
-                </label>
-                <input
-                  type='number'
-                  id='initialPrizePool'
-                  name='initialPrizePool'
-                  value={formData.initialPrizePool}
-                  onChange={handleInputChange}
-                  required
-                  min='0.000000001'
-                  step='0.000000001'
-                  className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-                />
-              </div>
+            <div>
+              <label
+                htmlFor='entryFee'
+                className='block text-sm font-medium text-gray-700 mb-2'
+              >
+                Entry Fee (ETH)
+              </label>
+              <input
+                type='number'
+                id='entryFee'
+                name='entryFee'
+                value={formData.entryFee}
+                onChange={handleInputChange}
+                required
+                min='0.000000001'
+                step='0.000000001'
+                className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+              />
+              <p className='text-xs text-gray-500 mt-1'>
+                Prize pool is funded from treasury (10x entry fee)
+              </p>
             </div>
 
             <div className='bg-blue-50 p-4 rounded-lg'>
@@ -286,7 +279,13 @@ export default function AdminPage() {
 
           <div className='mt-8 pt-6 border-t border-gray-200'>
             <div className='text-center space-y-4'>
-              <div>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <a
+                  href='/admin/treasury'
+                  className='inline-block bg-green-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-700 transition-colors'
+                >
+                  💰 Treasury Management
+                </a>
                 <a
                   href='/admin/manage'
                   className='inline-block bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors'

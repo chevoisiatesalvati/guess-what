@@ -12,10 +12,8 @@ export default function Game() {
     isConnected,
     isLoading: contractLoading,
     error: contractError,
-    switchToBaseNetwork,
     getRandomActiveGame,
     getActiveGamesCount,
-    joinGame: joinContractGame,
     submitGuess: submitContractGuess,
     getGameInfo,
     isPlayerInGame,
@@ -24,7 +22,6 @@ export default function Game() {
   // Game state
   const [gameId, setGameId] = useState<number | null>(null);
   const [gameData, setGameData] = useState<any>(null);
-  const [hasJoined, setHasJoined] = useState(false);
   const [isLoadingGame, setIsLoadingGame] = useState(true);
   const [guess, setGuess] = useState('');
   const [showResult, setShowResult] = useState(false);
@@ -58,13 +55,6 @@ export default function Game() {
 
         setGameId(randomGameId);
         setGameData(gameInfo);
-
-        // Check if player has already joined this game
-        if (address) {
-          const playerInGame = await isPlayerInGame(randomGameId);
-          setHasJoined(playerInGame);
-          console.log('👤 Player in game:', playerInGame);
-        }
       } catch (error: any) {
         console.error('❌ Error loading game:', error);
       } finally {
@@ -82,37 +72,10 @@ export default function Game() {
     isPlayerInGame,
   ]);
 
-  const handleJoinGame = async () => {
-    if (!gameId || !gameData || !isConnected) {
-      return;
-    }
-
-    try {
-      console.log(
-        `💰 Joining game ${gameId} with entry fee ${gameData.entryFee} ETH`
-      );
-      await joinContractGame(gameId, gameData.entryFee);
-
-      setHasJoined(true);
-      setResultMessage(`Successfully joined game ${gameId}!`);
-      setShowResult(true);
-      setTimeout(() => setShowResult(false), 3000);
-
-      // Refresh game data to get updated prize pool
-      const updatedGameInfo = await getGameInfo(gameId);
-      setGameData(updatedGameInfo);
-    } catch (error: any) {
-      console.error('❌ Failed to join game:', error);
-      setResultMessage(`Failed to join game: ${error.message}`);
-      setShowResult(true);
-      setTimeout(() => setShowResult(false), 3000);
-    }
-  };
-
   const handleGuessSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!guess.trim() || !gameId || !hasJoined) {
+    if (!guess.trim() || !gameId) {
       return;
     }
 
@@ -191,13 +154,6 @@ export default function Game() {
           </div>
 
           <button
-            onClick={switchToBaseNetwork}
-            className='w-full bg-yellow-600 text-white font-medium py-4 px-4 rounded-lg hover:bg-yellow-700 transition-colors mb-4'
-          >
-            Connect Wallet & Switch to Base
-          </button>
-
-          <button
             onClick={() => router.push('/')}
             className='w-full bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors'
           >
@@ -236,101 +192,7 @@ export default function Game() {
     );
   }
 
-  // Game lobby - before joining
-  if (!hasJoined) {
-    return (
-      <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4'>
-        <div className='bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full'>
-          {/* Header */}
-          <div className='text-center mb-8'>
-            <div className='w-20 h-20 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4'>
-              <span className='text-3xl font-bold text-white'>G</span>
-            </div>
-            <h1 className='text-3xl font-bold text-gray-900 mb-2'>
-              Game #{gameId}
-            </h1>
-            <p className='text-gray-600'>Join to reveal the words!</p>
-          </div>
-
-          {/* Game Info */}
-          <div className='space-y-4 mb-6'>
-            <div className='bg-blue-50 p-4 rounded-lg'>
-              <div className='text-sm text-gray-600 mb-1'>Entry Fee</div>
-              <div className='text-2xl font-bold text-blue-600'>
-                {gameData.entryFee} ETH
-              </div>
-            </div>
-
-            <div className='bg-green-50 p-4 rounded-lg'>
-              <div className='text-sm text-gray-600 mb-1'>
-                Current Prize Pool
-              </div>
-              <div className='text-2xl font-bold text-green-600'>
-                {gameData.totalPrize} ETH
-              </div>
-            </div>
-
-            <div className='bg-purple-50 p-4 rounded-lg'>
-              <div className='text-sm text-gray-600 mb-1'>
-                Initial Prize Pool
-              </div>
-              <div className='text-2xl font-bold text-purple-600'>
-                {gameData.initialPrizePool} ETH
-              </div>
-            </div>
-          </div>
-
-          {/* Hidden Words Preview */}
-          <div className='bg-gray-100 p-6 rounded-lg mb-6'>
-            <div className='text-center'>
-              <div className='text-sm text-gray-600 mb-3'>
-                Words are hidden until you join
-              </div>
-              <div className='space-y-3'>
-                <div className='bg-gray-300 h-12 rounded-lg animate-pulse'></div>
-                <div className='bg-purple-300 h-16 rounded-lg animate-pulse'></div>
-                <div className='bg-gray-300 h-12 rounded-lg animate-pulse'></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Join Button */}
-          <button
-            onClick={handleJoinGame}
-            disabled={contractLoading}
-            className='w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mb-4'
-          >
-            {contractLoading
-              ? 'Joining...'
-              : `Join Game (${gameData.entryFee} ETH)`}
-          </button>
-
-          {/* Error/Success Message */}
-          {showResult && (
-            <div
-              className={`mb-4 p-4 rounded-lg ${
-                resultMessage.includes('Success')
-                  ? 'bg-green-50 text-green-800'
-                  : 'bg-red-50 text-red-800'
-              }`}
-            >
-              {resultMessage}
-            </div>
-          )}
-
-          {/* Back Button */}
-          <button
-            onClick={() => router.push('/')}
-            className='w-full bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-200 transition-colors'
-          >
-            ← Back to Home
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Main game interface - after joining
+  // Main game interface - instant play, no join required!
   return (
     <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 p-4'>
       <div className='max-w-md mx-auto'>
@@ -360,10 +222,10 @@ export default function Game() {
           {/* Middle Word (Hidden) */}
           <div className='text-center mb-4'>
             <div className='text-3xl font-bold text-purple-600 bg-purple-100 py-4 px-6 rounded-lg border-2 border-purple-300'>
-              {'?'.repeat(gameData.middleWord.length)}
+              ???
             </div>
             <div className='text-sm text-gray-500 mt-2'>
-              Guess the word ({gameData.middleWord.length} letters)
+              Guess the middle word
             </div>
           </div>
 
@@ -421,8 +283,7 @@ export default function Game() {
           {/* Info */}
           <div className='mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg'>
             <div className='text-sm text-yellow-800 text-center'>
-              💡 Each guess costs {gameData.entryFee} ETH. Keep guessing until
-              you get it right!
+              💡 Each guess costs {gameData.entryFee} ETH.
             </div>
           </div>
         </div>

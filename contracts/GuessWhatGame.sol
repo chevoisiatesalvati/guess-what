@@ -8,11 +8,11 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     struct Game {
         uint256 gameId;
         string topWord;
-        string middleWord;
+        bytes32 middleWordHash; // SECURITY: Hashed instead of plaintext
         string bottomWord;
         uint256 entryFee;
         uint256 totalPrize;
-        uint256 initialPrizePool; // Admin-assigned initial prize pool
+        uint256 basePrizeAmount; // Base prize amount for winning (from treasury)
         uint256 startTime;
         bool isActive;
         bool isCompleted;
@@ -31,7 +31,9 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
 
     // State variables
     uint256 public nextGameId = 1;
-    uint256 public constant PLATFORM_FEE_PERCENT = 5; // 5% platform fee
+    uint256 public platformFeePercent = 5; // 5% default platform fee
+    uint256 public treasuryBalance; // Treasury for prize pools
+    uint256 public defaultPrizeMultiplier = 10; // Base prize = entry fee * multiplier
     
     mapping(uint256 => Game) public games;
     mapping(address => PlayerStats) public playerStats;
@@ -42,7 +44,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     address[] public adminList;
     
     // Events
-    event GameCreated(uint256 indexed gameId, uint256 entryFee);
+    event GameCreated(uint256 indexed gameId, uint256 entryFee, uint256 basePrizeAmount);
     event PlayerJoined(uint256 indexed gameId, address indexed player, uint256 entryFee);
     event GuessSubmitted(uint256 indexed gameId, address indexed player, string guess);
     event GameWon(uint256 indexed gameId, address indexed winner, uint256 prize);
@@ -50,6 +52,10 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     event PrizeClaimed(uint256 indexed gameId, address indexed winner, uint256 amount);
     event AdminAdded(address indexed admin);
     event AdminRemoved(address indexed admin);
+    event TreasuryFunded(address indexed funder, uint256 amount);
+    event TreasuryWithdrawn(address indexed recipient, uint256 amount);
+    event PrizeMultiplierUpdated(uint256 oldMultiplier, uint256 newMultiplier);
+    event PlatformFeeUpdated(uint256 oldFee, uint256 newFee);
 
     // Constructor
     constructor(address initialOwner, address[] memory initialAdmins) Ownable(initialOwner) {
@@ -83,72 +89,77 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     // Functions
     function createGame(
         string memory _topWord,
-        string memory _middleWord,
+        bytes32 _middleWordHash,
         string memory _bottomWord,
-        uint256 _entryFee,
-        uint256 _initialPrizePool
-    ) external onlyAdmin payable returns (uint256) {
+        uint256 _entryFee
+    ) external onlyAdmin returns (uint256) {
         require(_entryFee > 0, "Entry fee must be greater than 0");
-        require(msg.value >= _initialPrizePool, "Insufficient funds for prize pool");
+        require(_middleWordHash != bytes32(0), "Middle word hash cannot be empty");
         
         uint256 gameId = nextGameId++;
         Game storage game = games[gameId];
         
+        // Calculate base prize amount from treasury (entry fee * multiplier)
+        uint256 basePrize = _entryFee * defaultPrizeMultiplier;
+        require(treasuryBalance >= basePrize, "Insufficient treasury balance");
+        
         game.gameId = gameId;
         game.topWord = _topWord;
-        game.middleWord = _middleWord;
+        game.middleWordHash = _middleWordHash;
         game.bottomWord = _bottomWord;
         game.entryFee = _entryFee;
-        game.initialPrizePool = _initialPrizePool;
-        game.totalPrize = _initialPrizePool; // Start with admin's prize pool
+        game.basePrizeAmount = basePrize;
+        game.totalPrize = 0; // Grows as players guess
         game.startTime = block.timestamp;
         game.isActive = true;
         game.isCompleted = false;
         game.winner = address(0);
         
-        emit GameCreated(gameId, _entryFee);
+        emit GameCreated(gameId, _entryFee, basePrize);
         return gameId;
     }
 
-    function joinGame(uint256 _gameId) external payable gameExists(_gameId) gameActive(_gameId) {
-        Game storage game = games[_gameId];
-        require(!game.players[msg.sender], "Player already joined this game");
-        require(msg.value == game.entryFee, "Incorrect entry fee");
-        
-        game.players[msg.sender] = true;
-        game.totalPrize += msg.value;
-        playerGames[msg.sender].push(_gameId);
-        
-        // Update player stats - increment games played
-        PlayerStats storage stats = playerStats[msg.sender];
-        stats.gamesPlayed++;
-        
-        // Recalculate accuracy since gamesPlayed changed
-        if (stats.gamesPlayed > 0) {
-            stats.accuracy = (stats.correctGuesses * 10000) / stats.gamesPlayed;
-        }
-        
-        emit PlayerJoined(_gameId, msg.sender, msg.value);
-    }
+    // joinGame() removed - players auto-join on first guess for better UX
 
     function submitGuess(uint256 _gameId, string memory _guess) external payable gameExists(_gameId) gameActive(_gameId) nonReentrant {
         Game storage game = games[_gameId];
-        require(game.players[msg.sender], "Player not in this game");
         require(msg.value == game.entryFee, "Incorrect entry fee");
         
-        // Add entry fee to prize pool for each guess
+        // Get player stats storage reference once
+        PlayerStats storage stats = playerStats[msg.sender];
+        
+        // Auto-join on first guess (seamless UX - no separate join needed)
+        if (!game.players[msg.sender]) {
+            game.players[msg.sender] = true;
+            playerGames[msg.sender].push(_gameId);
+            
+            // Update player stats - first time playing this game
+            stats.gamesPlayed++;
+            
+            // Recalculate accuracy
+            if (stats.gamesPlayed > 0) {
+                stats.accuracy = (stats.correctGuesses * 10000) / stats.gamesPlayed;
+            }
+            
+            emit PlayerJoined(_gameId, msg.sender, msg.value);
+        }
+        
+        // Add entry fee to accumulated prize pool
         game.totalPrize += msg.value;
         
         // Update player stats - increment guesses played
-        PlayerStats storage stats = playerStats[msg.sender];
         stats.guessesPlayed++;
         
         // Store the latest guess
         game.playerGuesses[msg.sender] = _guess;
         
-        // Check if guess is correct
-        if (keccak256(bytes(_guess)) == keccak256(bytes(game.middleWord))) {
+        // SECURITY: Compare hash of guess with stored hash
+        // This prevents reading the answer from contract storage
+        if (keccak256(bytes(_guess)) == game.middleWordHash) {
             _endGame(_gameId, msg.sender);
+        } else {
+            // Incorrect guess - add to treasury
+            treasuryBalance += msg.value;
         }
         
         emit GuessSubmitted(_gameId, msg.sender, _guess);
@@ -160,9 +171,19 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         game.isCompleted = true;
         game.winner = _winner;
         
-        // Calculate platform fee
-        uint256 platformFee = (game.totalPrize * PLATFORM_FEE_PERCENT) / 100;
-        uint256 winnerPrize = game.totalPrize - platformFee;
+        // Total prize = base prize from treasury + accumulated guesses (minus last correct guess)
+        // Note: game.totalPrize includes the winning guess fee, which we already added to treasury
+        // So we need to subtract it back out
+        uint256 accumulatedPrize = game.totalPrize > game.entryFee ? game.totalPrize - game.entryFee : 0;
+        uint256 totalPrizeAmount = game.basePrizeAmount + accumulatedPrize;
+        
+        // Calculate platform fee from total
+        uint256 platformFee = (totalPrizeAmount * platformFeePercent) / 100;
+        uint256 winnerPrize = totalPrizeAmount - platformFee;
+        
+        // Deduct base prize from treasury
+        require(treasuryBalance >= game.basePrizeAmount, "Insufficient treasury");
+        treasuryBalance -= game.basePrizeAmount;
         
         // Update player stats
         PlayerStats storage stats = playerStats[_winner];
@@ -173,7 +194,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
             stats.accuracy = (stats.correctGuesses * 10000) / stats.gamesPlayed;
         }
         
-        // Transfer prize to winner
+        // Transfer prize to winner (base from treasury + accumulated from guesses)
         if (winnerPrize > 0) {
             payable(_winner).transfer(winnerPrize);
         }
@@ -191,25 +212,27 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     function getGameInfo(uint256 _gameId) external view gameExists(_gameId) returns (
         uint256 gameId,
         string memory topWord,
-        string memory middleWord,
+        uint256 middleWordLength,
         string memory bottomWord,
         uint256 entryFee,
         uint256 totalPrize,
-        uint256 initialPrizePool,
+        uint256 basePrizeAmount,
         uint256 startTime,
         bool isActive,
         bool isCompleted,
         address winner
     ) {
         Game storage game = games[_gameId];
+        // SECURITY: Don't return the hash, only metadata
+        // Calculate middle word length from hash (not directly available, return 0 for now)
         return (
             game.gameId,
             game.topWord,
-            game.middleWord,
+            0, // middleWordLength - not available from hash
             game.bottomWord,
             game.entryFee,
             game.totalPrize,
-            game.initialPrizePool,
+            game.basePrizeAmount,
             game.startTime,
             game.isActive,
             game.isCompleted,
@@ -325,6 +348,40 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         return adminList.length;
     }
 
+    // Treasury management functions
+    function fundTreasury() external payable onlyAdmin {
+        require(msg.value > 0, "Must send funds");
+        treasuryBalance += msg.value;
+        emit TreasuryFunded(msg.sender, msg.value);
+    }
+    
+    function withdrawFromTreasury(uint256 _amount) external onlyOwner nonReentrant {
+        require(_amount > 0, "Amount must be greater than 0");
+        require(treasuryBalance >= _amount, "Insufficient treasury balance");
+        
+        treasuryBalance -= _amount;
+        payable(owner()).transfer(_amount);
+        emit TreasuryWithdrawn(owner(), _amount);
+    }
+    
+    function setPrizeMultiplier(uint256 _multiplier) external onlyOwner {
+        require(_multiplier > 0, "Multiplier must be greater than 0");
+        uint256 oldMultiplier = defaultPrizeMultiplier;
+        defaultPrizeMultiplier = _multiplier;
+        emit PrizeMultiplierUpdated(oldMultiplier, _multiplier);
+    }
+    
+    function setPlatformFee(uint256 _feePercent) external onlyOwner {
+        require(_feePercent <= 50, "Fee cannot exceed 50%");
+        uint256 oldFee = platformFeePercent;
+        platformFeePercent = _feePercent;
+        emit PlatformFeeUpdated(oldFee, _feePercent);
+    }
+    
+    function getTreasuryBalance() external view returns (uint256) {
+        return treasuryBalance;
+    }
+
     // Emergency functions
     function emergencyWithdraw() external onlyOwner nonReentrant {
         uint256 balance = address(this).balance;
@@ -336,22 +393,22 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         return address(this).balance;
     }
 
-    // Emergency function to close a game and return prize pool to admin
+    // Emergency function to close a game and return accumulated prizes
     function emergencyCloseGame(uint256 _gameId) external onlyAdmin nonReentrant {
         Game storage game = games[_gameId];
         require(game.isActive, "Game is not active");
         
-        uint256 prizeToReturn = game.totalPrize;
+        uint256 accumulatedPrize = game.totalPrize;
         
         game.isActive = false;
         game.isCompleted = true;
         game.totalPrize = 0; // Prevent re-entrancy
         
-        // Return the total prize pool to the admin who closes the game
-        if (prizeToReturn > 0) {
-            payable(msg.sender).transfer(prizeToReturn);
+        // Return accumulated prizes to treasury
+        if (accumulatedPrize > 0) {
+            treasuryBalance += accumulatedPrize;
         }
         
-        emit GameExpired(_gameId, prizeToReturn);
+        emit GameExpired(_gameId, accumulatedPrize);
     }
 }

@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'Guess What?',
     openGraph: {
       title: 'Guess What?',
-      description: 'A brain game only for smart people',
+      description: 'A smart game for smart people!',
     },
     other: {
       'fc:frame': JSON.stringify(frame),

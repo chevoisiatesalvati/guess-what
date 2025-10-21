@@ -44,17 +44,12 @@ export default function Home() {
     error: null,
   };
 
-  // Debug logging
-  console.log('Home component - user data:', user);
-  console.log('Home component - isLoading:', isLoading);
-  console.log('Home component - error:', error);
-
   // Navigation handlers
   const goToGameLobby = () => {
     router.push('/game');
   };
 
-  const handleViewLeaderboard = () => {
+  const goToLeaderboard = () => {
     router.push('/leaderboard');
   };
 
@@ -117,9 +112,9 @@ export default function Home() {
     return (
       <div className='bg-white text-black flex min-h-screen flex-col items-center justify-center p-4'>
         <div className='text-center space-y-4'>
-          <h1 className='text-4xl font-bold'>Welcome to Guess What?</h1>
+          <h1 className='text-4xl font-bold'>Guess What?</h1>
           <p className='text-lg text-muted-foreground'>
-            Sign in to get started with the word association game
+            You must first sign in!
           </p>
           <p className='text-lg text-muted-foreground'>
             {address
@@ -241,7 +236,7 @@ export default function Home() {
 
           <div className='grid grid-cols-2 gap-4'>
             <button
-              onClick={handleViewLeaderboard}
+              onClick={goToLeaderboard}
               className='bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors'
             >
               View Leaderboard

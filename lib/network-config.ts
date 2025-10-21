@@ -10,13 +10,14 @@ import type { Chain } from 'viem';
  */
 
 // Contract addresses for each network
+// These are loaded from the deployment files and updated when contracts are redeployed
 export const CONTRACT_ADDRESSES = {
   [base.id]: '0xC85Dc6C4a2d1b2f8e4842D8737DE06425E35919A', // Base Mainnet
-  [baseSepolia.id]: '0xFcfF1b2Ba3859E7F65F59bA43799Afa3BeDB45b0', // Base Sepolia
+  [baseSepolia.id]: '0xf209F38CAc19b63Cf1eC5A89b13Ae7b1a4bf63c7', // Base Sepolia
 } as const;
 
 // RPC URLs for each network
-const RPC_URLS = {
+export const RPC_URLS = {
   [base.id]: 'https://mainnet.base.org',
   [baseSepolia.id]: 'https://base-sepolia.drpc.org',
 } as const;
@@ -94,4 +95,20 @@ export function isProduction(): boolean {
  */
 export function isDevelopment(): boolean {
   return env.NEXT_PUBLIC_APP_ENV === 'development';
+}
+
+/**
+ * Update contract addresses after deployment
+ * This function should be called after deploying new contracts
+ * to update the addresses in the deployed_addresses.json files
+ */
+export function updateContractAddresses() {
+  console.log('📋 Contract addresses:');
+  console.log(`Base Mainnet (${base.id}): ${CONTRACT_ADDRESSES[base.id]}`);
+  console.log(
+    `Base Sepolia (${baseSepolia.id}): ${CONTRACT_ADDRESSES[baseSepolia.id]}`
+  );
+  console.log(
+    '💡 To update addresses after deployment, manually update this file with new addresses from ignition/deployments/'
+  );
 }

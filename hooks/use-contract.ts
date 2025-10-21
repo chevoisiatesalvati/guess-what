@@ -5,11 +5,11 @@ import { contractService } from '@/lib/contract-utils';
 export interface ContractGameInfo {
   gameId: number;
   topWord: string;
-  middleWord: string;
+  middleWordLength: number; // Changed from middleWord
   bottomWord: string;
   entryFee: string;
   totalPrize: string;
-  initialPrizePool: string;
+  basePrizeAmount: string; // Changed from initialPrizePool
   startTime: number;
   isActive: boolean;
   isCompleted: boolean;
@@ -37,10 +37,9 @@ export const useContract = () => {
   const createGame = useCallback(
     async (
       topWord: string,
-      middleWord: string,
+      middleWordHash: `0x${string}`,
       bottomWord: string,
-      entryFee: string,
-      initialPrizePool: string
+      entryFee: string
     ): Promise<number> => {
       setIsLoading(true);
       setError(null);
@@ -48,10 +47,9 @@ export const useContract = () => {
       try {
         const gameId = await contractService.createGame(
           topWord,
-          middleWord,
+          middleWordHash,
           bottomWord,
-          entryFee,
-          initialPrizePool
+          entryFee
         );
         return gameId;
       } catch (err: any) {
@@ -64,22 +62,7 @@ export const useContract = () => {
     []
   );
 
-  const joinGame = useCallback(
-    async (gameId: number, entryFee: string): Promise<void> => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        await contractService.joinGame(gameId, entryFee);
-      } catch (err: any) {
-        setError(err.message || 'Failed to join game');
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
+  // joinGame() removed - players auto-join on first submitGuess() for better UX
 
   const submitGuess = useCallback(
     async (gameId: number, guess: string, entryFee: string): Promise<void> => {
@@ -149,20 +132,6 @@ export const useContract = () => {
     },
     [address]
   );
-
-  const switchToBaseNetwork = useCallback(async (): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      await contractService.switchToBaseNetwork();
-    } catch (err: any) {
-      setError(err.message || 'Failed to switch network');
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   const getNextGameId = useCallback(async (): Promise<number> => {
     try {
@@ -279,18 +248,109 @@ export const useContract = () => {
     }
   }, []);
 
+  // Treasury management functions
+  const fundTreasury = useCallback(async (amount: string): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await contractService.fundTreasury(amount);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fund treasury');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const getTreasuryBalance = useCallback(async (): Promise<string> => {
+    try {
+      return await contractService.getTreasuryBalance();
+    } catch (err: any) {
+      setError(err.message || 'Failed to get treasury balance');
+      return '0';
+    }
+  }, []);
+
+  const withdrawFromTreasury = useCallback(
+    async (amount: string): Promise<void> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await contractService.withdrawFromTreasury(amount);
+      } catch (err: any) {
+        setError(err.message || 'Failed to withdraw from treasury');
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const getPrizeMultiplier = useCallback(async (): Promise<number> => {
+    try {
+      return await contractService.getPrizeMultiplier();
+    } catch (err: any) {
+      setError(err.message || 'Failed to get prize multiplier');
+      return 10; // default
+    }
+  }, []);
+
+  const setPrizeMultiplier = useCallback(
+    async (multiplier: number): Promise<void> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await contractService.setPrizeMultiplier(multiplier);
+      } catch (err: any) {
+        setError(err.message || 'Failed to set prize multiplier');
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const getPlatformFee = useCallback(async (): Promise<number> => {
+    try {
+      return await contractService.getPlatformFee();
+    } catch (err: any) {
+      setError(err.message || 'Failed to get platform fee');
+      return 10; // default
+    }
+  }, []);
+
+  const setPlatformFee = useCallback(
+    async (feePercent: number): Promise<void> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await contractService.setPlatformFee(feePercent);
+      } catch (err: any) {
+        setError(err.message || 'Failed to set platform fee');
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
   return {
     isConnected,
     isLoading,
     error,
     createGame,
-    joinGame,
     submitGuess,
     getGameInfo,
     getPlayerStats,
     isPlayerInGame,
     hasPlayerGuessed,
-    switchToBaseNetwork,
     getNextGameId,
     isGameAvailable,
     getRandomActiveGame,
@@ -302,5 +362,12 @@ export const useContract = () => {
     removeAdmin,
     getAdminList,
     getAdminCount,
+    fundTreasury,
+    getTreasuryBalance,
+    withdrawFromTreasury,
+    getPrizeMultiplier,
+    setPrizeMultiplier,
+    getPlatformFee,
+    setPlatformFee,
   };
 };
