@@ -23,10 +23,9 @@ console.log(
 console.log('🔧 Wagmi Config - RPC URL:', currentRpcUrl);
 
 export const config = createConfig({
-  chains: getSupportedChains(), // Support both chains for flexibility
+  chains: [getCurrentChain()], // Only support the current environment's chain
   transports: {
-    [base.id]: http(RPC_URLS[base.id]),
-    [baseSepolia.id]: http(RPC_URLS[baseSepolia.id]),
+    [getCurrentChainId()]: http(getCurrentRpcUrl()),
   },
   connectors: [miniAppConnector()],
 });

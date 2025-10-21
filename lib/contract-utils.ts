@@ -65,45 +65,13 @@ export class ContractService {
   }
 
   private async getWalletClient() {
+    // Since wagmi config now only supports the current environment's chain,
+    // getWalletClient() will always return the correct chain
     const walletClient = await getWalletClient(config);
     if (!walletClient) {
       throw new Error('Wallet not connected');
     }
     return walletClient;
-  }
-
-  async ensureCorrectChain(): Promise<void> {
-    const walletClient = await this.getWalletClient();
-    const currentChain = getCurrentChain();
-
-    console.log('🔍 Checking wallet chain...');
-    console.log(
-      '🌐 Required chain:',
-      currentChain.name,
-      'ID:',
-      currentChain.id
-    );
-    console.log(
-      '👛 Wallet chain:',
-      walletClient.chain?.name,
-      'ID:',
-      walletClient.chain?.id
-    );
-
-    if (walletClient.chain?.id !== currentChain.id) {
-      console.log('🔄 Switching wallet to', currentChain.name);
-      try {
-        await walletClient.switchChain({ id: currentChain.id });
-        console.log('✅ Chain switched successfully to', currentChain.name);
-      } catch (error: any) {
-        console.error('❌ Failed to switch chain:', error);
-        throw new Error(
-          `Please switch your wallet to ${currentChain.name} (Chain ID: ${currentChain.id})`
-        );
-      }
-    } else {
-      console.log('✅ Wallet already on correct chain');
-    }
   }
 
   async createGame(
@@ -116,6 +84,13 @@ export class ContractService {
     console.log('📝 Words:', { topWord, middleWordHash, bottomWord });
     console.log('💰 Entry fee:', entryFee);
     console.log('📍 Contract address:', this.contractAddress);
+    // Chain info
+    console.log('🔍 Chain info:', {
+      currentChain: getCurrentChain(),
+      currentChainId: getCurrentChainId(),
+      currentChainName: getCurrentChainName(),
+      currentTransport: getCurrentTransport(),
+    });
 
     if (!this.contractAddress) {
       const error = 'Contract address not initialized';
@@ -124,6 +99,7 @@ export class ContractService {
     }
 
     const walletClient = await this.getWalletClient();
+    console.log('🔍 Wallet client:', walletClient);
 
     try {
       console.log('📤 Sending createGame transaction...');
