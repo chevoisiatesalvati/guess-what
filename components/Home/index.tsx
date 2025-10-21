@@ -45,7 +45,7 @@ export default function Home() {
   };
 
   // Navigation handlers
-  const goToGameLobby = () => {
+  const goToGame = () => {
     router.push('/game');
   };
 
@@ -228,10 +228,10 @@ export default function Home() {
         {/* Game Actions */}
         <div className='space-y-4'>
           <button
-            onClick={goToGameLobby}
+            onClick={goToGame}
             className='w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105'
           >
-            Game Lobby
+            Play Game
           </button>
 
           <div className='grid grid-cols-2 gap-4'>
