@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useContract } from '@/hooks/use-contract';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function TreasuryPage() {
   const router = useRouter();
@@ -32,7 +33,6 @@ export default function TreasuryPage() {
   const [withdrawAmount, setWithdrawAmount] = useState('0.001');
   const [newMultiplier, setNewMultiplier] = useState('10');
   const [newPlatformFee, setNewPlatformFee] = useState('10');
-  const [successMessage, setSuccessMessage] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Check if user is admin
@@ -99,73 +99,85 @@ export default function TreasuryPage() {
   const handleFundTreasury = async (e: React.FormEvent) => {
     e.preventDefault();
     setActionLoading('fund');
-    setSuccessMessage('');
 
-    try {
+    const fundPromise = (async () => {
       await fundTreasury(fundAmount);
-      setSuccessMessage(`Successfully funded treasury with ${fundAmount} ETH!`);
       setFundAmount('0.001');
       await refreshBalance();
-    } catch (err: any) {
-      console.error('Error funding treasury:', err);
-    } finally {
-      setActionLoading(null);
-    }
+      return fundAmount;
+    })();
+
+    toast.promise(fundPromise, {
+      loading: 'Funding treasury...',
+      success: amount => `Successfully funded treasury with ${amount} ETH!`,
+      error: err => `Failed to fund treasury: ${err.message}`,
+      finally: () => {
+        setActionLoading(null);
+      },
+    });
   };
 
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
     setActionLoading('withdraw');
-    setSuccessMessage('');
 
-    try {
+    const withdrawPromise = (async () => {
       await withdrawFromTreasury(withdrawAmount);
-      setSuccessMessage(
-        `Successfully withdrew ${withdrawAmount} ETH from treasury!`
-      );
       setWithdrawAmount('0.001');
       await refreshBalance();
-    } catch (err: any) {
-      console.error('Error withdrawing from treasury:', err);
-    } finally {
-      setActionLoading(null);
-    }
+      return withdrawAmount;
+    })();
+
+    toast.promise(withdrawPromise, {
+      loading: 'Withdrawing from treasury...',
+      success: amount => `Successfully withdrew ${amount} ETH from treasury!`,
+      error: err => `Failed to withdraw: ${err.message}`,
+      finally: () => {
+        setActionLoading(null);
+      },
+    });
   };
 
   const handleSetMultiplier = async (e: React.FormEvent) => {
     e.preventDefault();
     setActionLoading('multiplier');
-    setSuccessMessage('');
 
-    try {
+    const multiplierPromise = (async () => {
       const multiplierValue = parseInt(newMultiplier);
       await setPrizeMultiplier(multiplierValue);
       setPrizeMultiplierState(multiplierValue);
-      setSuccessMessage(
-        `Successfully updated prize multiplier to ${multiplierValue}x!`
-      );
-    } catch (err: any) {
-      console.error('Error setting multiplier:', err);
-    } finally {
-      setActionLoading(null);
-    }
+      return multiplierValue;
+    })();
+
+    toast.promise(multiplierPromise, {
+      loading: 'Updating prize multiplier...',
+      success: value => `Prize multiplier updated to ${value}x!`,
+      error: err => `Failed to update multiplier: ${err.message}`,
+      finally: () => {
+        setActionLoading(null);
+      },
+    });
   };
 
   const handleSetPlatformFee = async (e: React.FormEvent) => {
     e.preventDefault();
     setActionLoading('platformFee');
-    setSuccessMessage('');
 
-    try {
+    const feePromise = (async () => {
       const feeValue = parseInt(newPlatformFee);
       await setPlatformFee(feeValue);
       setPlatformFeeState(feeValue);
-      setSuccessMessage(`Successfully updated platform fee to ${feeValue}%!`);
-    } catch (err: any) {
-      console.error('Error setting platform fee:', err);
-    } finally {
-      setActionLoading(null);
-    }
+      return feeValue;
+    })();
+
+    toast.promise(feePromise, {
+      loading: 'Updating platform fee...',
+      success: value => `Platform fee updated to ${value}%!`,
+      error: err => `Failed to update fee: ${err.message}`,
+      finally: () => {
+        setActionLoading(null);
+      },
+    });
   };
 
   if (!isConnected) {
@@ -222,15 +234,6 @@ export default function TreasuryPage() {
               Manage game treasury and prize settings
             </p>
           </div>
-
-          {/* Success Message */}
-          {successMessage && (
-            <div className='mb-6 p-4 bg-green-50 border border-green-200 rounded-lg'>
-              <div className='text-green-800'>
-                <strong>Success:</strong> {successMessage}
-              </div>
-            </div>
-          )}
 
           {/* Error Message */}
           {error && (

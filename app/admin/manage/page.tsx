@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useContract } from '@/hooks/use-contract';
+import { toast } from 'sonner';
 
 export default function AdminManagePage() {
   const { address, isConnected } = useAccount();
@@ -23,7 +24,6 @@ export default function AdminManagePage() {
   const [adminList, setAdminList] = useState<string[]>([]);
   const [newAdminAddress, setNewAdminAddress] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
   // Check admin status
   useEffect(() => {
@@ -77,24 +77,33 @@ export default function AdminManagePage() {
 
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newAdminAddress.trim()) return;
+    if (!newAdminAddress.trim()) {
+      toast.error('Please enter an admin address');
+      return;
+    }
 
     setIsSubmitting(true);
-    setSuccessMessage('');
 
-    try {
+    const addPromise = (async () => {
       await addAdmin(newAdminAddress);
-      setSuccessMessage(`Admin ${newAdminAddress} added successfully!`);
+      const addr = newAdminAddress;
       setNewAdminAddress('');
 
       // Reload admin list
       const admins = await getAdminList();
       setAdminList(admins);
-    } catch (err: any) {
-      console.error('❌ Error adding admin:', err);
-    } finally {
-      setIsSubmitting(false);
-    }
+
+      return addr;
+    })();
+
+    toast.promise(addPromise, {
+      loading: 'Adding admin...',
+      success: addr => `Admin ${addr} added successfully!`,
+      error: err => `Failed to add admin: ${err.message}`,
+      finally: () => {
+        setIsSubmitting(false);
+      },
+    });
   };
 
   const handleRemoveAdmin = async (adminAddress: string) => {
@@ -102,20 +111,25 @@ export default function AdminManagePage() {
       return;
 
     setIsSubmitting(true);
-    setSuccessMessage('');
 
-    try {
+    const removePromise = (async () => {
       await removeAdmin(adminAddress);
-      setSuccessMessage(`Admin ${adminAddress} removed successfully!`);
 
       // Reload admin list
       const admins = await getAdminList();
       setAdminList(admins);
-    } catch (err: any) {
-      console.error('❌ Error removing admin:', err);
-    } finally {
-      setIsSubmitting(false);
-    }
+
+      return adminAddress;
+    })();
+
+    toast.promise(removePromise, {
+      loading: 'Removing admin...',
+      success: addr => `Admin ${addr} removed successfully!`,
+      error: err => `Failed to remove admin: ${err.message}`,
+      finally: () => {
+        setIsSubmitting(false);
+      },
+    });
   };
 
   if (!isConnected) {
@@ -188,14 +202,6 @@ export default function AdminManagePage() {
             <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-lg'>
               <div className='text-red-800'>
                 <strong>Error:</strong> {error}
-              </div>
-            </div>
-          )}
-
-          {successMessage && (
-            <div className='mb-6 p-4 bg-green-50 border border-green-200 rounded-lg'>
-              <div className='text-green-800'>
-                <strong>Success:</strong> {successMessage}
               </div>
             </div>
           )}

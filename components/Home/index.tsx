@@ -268,16 +268,6 @@ export default function Home() {
             </div>
           ) : null}
         </div>
-
-        {/* Recent Games */}
-        <div className='mt-12'>
-          <h3 className='text-xl font-semibold text-gray-900 mb-4'>
-            Recent Games
-          </h3>
-          <div className='bg-gray-50 p-6 rounded-lg text-center text-gray-500'>
-            <p>No games played yet. Start your first game!</p>
-          </div>
-        </div>
       </main>
     </div>
   );

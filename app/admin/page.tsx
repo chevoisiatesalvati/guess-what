@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useContract } from '@/hooks/use-contract';
 import { hashWord } from '@/lib/contract-utils';
+import { toast } from 'sonner';
 
 export default function AdminPage() {
   const { address, isConnected } = useAccount();
@@ -17,7 +18,6 @@ export default function AdminPage() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(false);
 
@@ -55,9 +55,8 @@ export default function AdminPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setSuccessMessage('');
 
-    try {
+    const createGamePromise = (async () => {
       // Normalize and hash the middle word for security
       const normalizedTopWord = formData.topWord.trim().toLowerCase();
       const normalizedMiddleWord = formData.middleWord.trim().toLowerCase();
@@ -67,11 +66,6 @@ export default function AdminPage() {
       const middleWordHash = hashWord(normalizedMiddleWord);
 
       console.log('🔐 Creating game with hashed middle word');
-      console.log('Words:', {
-        normalizedTopWord,
-        middleWordHash,
-        normalizedBottomWord,
-      });
 
       const gameId = await createGame(
         normalizedTopWord,
@@ -81,8 +75,6 @@ export default function AdminPage() {
         formData.entryFee
       );
 
-      setSuccessMessage(`Game created successfully! Game ID: ${gameId}`);
-
       // Reset form
       setFormData({
         topWord: '',
@@ -90,11 +82,18 @@ export default function AdminPage() {
         bottomWord: '',
         entryFee: '0.0001',
       });
-    } catch (err: any) {
-      console.error('Error creating game:', err);
-    } finally {
-      setIsSubmitting(false);
-    }
+
+      return gameId;
+    })();
+
+    toast.promise(createGamePromise, {
+      loading: 'Creating game...',
+      success: gameId => `Game #${gameId} created successfully!`,
+      error: err => `Failed to create game: ${err.message}`,
+      finally: () => {
+        setIsSubmitting(false);
+      },
+    });
   };
 
   if (!isConnected) {
@@ -157,14 +156,6 @@ export default function AdminPage() {
             <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-lg'>
               <div className='text-red-800'>
                 <strong>Error:</strong> {error}
-              </div>
-            </div>
-          )}
-
-          {successMessage && (
-            <div className='mb-6 p-4 bg-green-50 border border-green-200 rounded-lg'>
-              <div className='text-green-800'>
-                <strong>Success:</strong> {successMessage}
               </div>
             </div>
           )}

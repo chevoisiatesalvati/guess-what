@@ -4,6 +4,7 @@ import { useContract } from '@/hooks/use-contract';
 import { useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function Game() {
   const router = useRouter();
@@ -25,8 +26,6 @@ export default function Game() {
   const [isLoadingGame, setIsLoadingGame] = useState(true);
   const [guess, setGuess] = useState('');
   const [letterInputs, setLetterInputs] = useState<string[]>([]);
-  const [showResult, setShowResult] = useState(false);
-  const [resultMessage, setResultMessage] = useState('');
   const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
 
   // Load a random active game on component mount
@@ -172,40 +171,35 @@ export default function Game() {
         const platformFee = parseFloat(updatedGameInfo.totalPrize) * 0.05;
         const winnerPrize =
           parseFloat(updatedGameInfo.totalPrize) - platformFee;
-        setResultMessage(`🎉 Correct! You won ${winnerPrize.toFixed(4)} ETH!`);
-        setShowResult(true);
+        toast.success(`🎉 Correct! You won ${winnerPrize.toFixed(4)} ETH!`, {
+          duration: 5000,
+        });
         setGameData(updatedGameInfo);
         setTimeout(() => {
           router.push('/');
         }, 5000);
       } else {
         // Incorrect guess
-        setResultMessage(
-          '❌ Incorrect guess. Try again! (costs 1 entry fee per guess)'
-        );
-        setShowResult(true);
+        toast.error('Incorrect guess. Try again!');
         setGameData(updatedGameInfo);
-        setTimeout(() => setShowResult(false), 3000);
+
+        // Reset letter inputs
+        setLetterInputs(new Array(gameData.middleWordLength).fill(''));
+        setGuess('');
+
+        // Re-focus first input for next guess
+        setTimeout(() => {
+          const firstInput = document.getElementById(
+            'letter-0'
+          ) as HTMLInputElement;
+          if (firstInput) {
+            firstInput.focus();
+          }
+        }, 100);
       }
-
-      // Reset letter inputs
-      setLetterInputs(new Array(gameData.middleWordLength).fill(''));
-      setGuess('');
-
-      // Re-focus first input for next guess
-      setTimeout(() => {
-        const firstInput = document.getElementById(
-          'letter-0'
-        ) as HTMLInputElement;
-        if (firstInput) {
-          firstInput.focus();
-        }
-      }, 100);
     } catch (error: any) {
       console.error('❌ Failed to submit guess:', error);
-      setResultMessage(`Error: ${error.message}`);
-      setShowResult(true);
-      setTimeout(() => setShowResult(false), 3000);
+      toast.error(error.message || 'Failed to submit guess');
     } finally {
       setIsSubmittingGuess(false);
     }
@@ -353,20 +347,6 @@ export default function Game() {
               {gameData.bottomWord.toUpperCase()}
             </div>
           </div>
-
-          {/* Result Display */}
-          {showResult && (
-            <div
-              className={`text-center py-2 px-4 rounded-lg mb-3 ${
-                resultMessage.includes('Correct') ||
-                resultMessage.includes('won')
-                  ? 'bg-green-100 text-green-800 border-2 border-green-300'
-                  : 'bg-red-100 text-red-800 border-2 border-red-300'
-              }`}
-            >
-              <div className='font-bold text-sm'>{resultMessage}</div>
-            </div>
-          )}
 
           {/* Submit Button */}
           <button
