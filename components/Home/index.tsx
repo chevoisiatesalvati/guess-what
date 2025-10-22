@@ -214,35 +214,40 @@ export default function Home() {
       </motion.header>
 
       {/* Main Content */}
-      <main className='flex-1 flex flex-col max-w-4xl mx-auto w-full p-4 overflow-y-auto'>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className='text-center mb-4'
-        >
+      <main className='flex-1 flex flex-col justify-between max-w-4xl mx-auto w-full p-4 overflow-y-auto'>
+        {/* Top Content */}
+        <div className='flex-1 flex flex-col'>
           <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-            className='text-5xl mb-2'
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className='text-center mb-4'
           >
-            🧠
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              className='text-5xl mb-2'
+            >
+              🧠
+            </motion.div>
+            <h2 className='text-3xl font-bold text-white mb-1'>
+              Ready to Play?
+            </h2>
+            <p className='text-sm text-white/70'>
+              Guess the word, win the prize!
+            </p>
           </motion.div>
-          <h2 className='text-3xl font-bold text-white mb-1'>Ready to Play?</h2>
-          <p className='text-sm text-white/70'>
-            💰 Check your stats below for winnings!
-          </p>
-        </motion.div>
 
-        {/* Your Stats */}
-        <YourStats />
+          {/* Your Stats */}
+          <YourStats />
+        </div>
 
-        {/* Game Actions */}
+        {/* Game Actions - Always at bottom */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className='space-y-4'
+          className='space-y-4 flex-shrink-0'
         >
           <motion.button
             whileHover={{ scale: 1.03, y: -3 }}

@@ -273,38 +273,38 @@ export default function Game() {
 
   // Main game interface
   return (
-    <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center p-3'>
-      <div className='max-w-md mx-auto w-full'>
+    <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex flex-col p-3'>
+      <div className='max-w-md mx-auto w-full pt-4'>
         {/* Header with Prize */}
-        <div className='bg-white rounded-t-2xl p-4 text-center'>
-          <div className='text-xs text-gray-500 mb-2'>Game #{gameId}</div>
-          <div className='bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-3 px-6 rounded-lg shadow-lg'>
-            <div className='text-sm'>Prize Pool</div>
-            <div className='text-2xl'>
+        <div className='bg-white rounded-t-2xl p-3 text-center'>
+          <div className='text-xs text-gray-500 mb-1'>Game #{gameId}</div>
+          <div className='bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg'>
+            <div className='text-xs'>Prize Pool</div>
+            <div className='text-xl'>
               {parseFloat(gameData.totalPrize).toFixed(4)} ETH
             </div>
           </div>
         </div>
 
         {/* Instructions */}
-        <div className='bg-gradient-to-r from-purple-50 to-blue-50 px-4 py-3 border-y border-purple-200'>
-          <p className='text-center text-sm text-gray-700'>
-            💡 Find the word connecting these two!
+        <div className='bg-gradient-to-r from-purple-50 to-blue-50 px-3 py-2 border-y border-purple-200'>
+          <p className='text-center text-xs text-gray-700'>
+            💡 Find the word connecting the other two!
           </p>
         </div>
 
         {/* Game Board */}
-        <div className='bg-white p-4'>
+        <div className='bg-white p-3'>
           {/* Top Word */}
-          <div className='text-center mb-3'>
-            <div className='text-xl font-bold text-gray-900 bg-gray-100 py-2 px-4 rounded-lg'>
+          <div className='text-center mb-2'>
+            <div className='text-lg font-bold text-gray-900 bg-gray-100 py-2 px-3 rounded-lg'>
               {gameData.topWord.toUpperCase()}
             </div>
           </div>
 
           {/* Middle Word (Letter Inputs) */}
-          <div className='text-center mb-3'>
-            <div className='flex justify-center items-center gap-1 bg-purple-100 py-2 px-4 rounded-lg border-2 border-purple-300'>
+          <div className='text-center mb-2'>
+            <div className='flex justify-center items-center gap-1 bg-purple-100 py-2 px-3 rounded-lg border-2 border-purple-300'>
               {letterInputs.map((letter, index) => (
                 <input
                   key={index}
@@ -342,8 +342,8 @@ export default function Game() {
           </div>
 
           {/* Bottom Word */}
-          <div className='text-center mb-4'>
-            <div className='text-xl font-bold text-gray-900 bg-gray-100 py-2 px-4 rounded-lg'>
+          <div className='text-center mb-3'>
+            <div className='text-lg font-bold text-gray-900 bg-gray-100 py-2 px-3 rounded-lg'>
               {gameData.bottomWord.toUpperCase()}
             </div>
           </div>
@@ -356,16 +356,14 @@ export default function Game() {
               letterInputs.some(letter => letter === '') ||
               !gameData.isActive
             }
-            className='w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+            className='w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm'
           >
-            {isSubmittingGuess
-              ? 'Submitting...'
-              : `Submit Guess (${gameData.entryFee} ETH)`}
+            {isSubmittingGuess ? 'Submitting...' : `Submit Guess`}
           </button>
         </div>
 
         {/* Footer */}
-        <div className='bg-white rounded-b-2xl px-4 py-2 text-center'>
+        <div className='bg-white rounded-b-2xl px-3 py-2 text-center'>
           <div className='text-xs text-gray-500'>
             💡 {gameData.entryFee} ETH per guess
           </div>
