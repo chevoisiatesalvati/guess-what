@@ -6,21 +6,19 @@ import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { useContract } from '@/hooks/use-contract';
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { toast } from 'sonner';
+import YourStats from '@/components/YourStats';
+import GameRules from '@/components/GameRules';
 
 export default function Home() {
   const { user, isLoading, error, signIn } = useUser();
   const { address } = useAccount();
   const router = useRouter();
-  const { isAdmin: checkIsAdmin, getPlayerStats } = useContract();
+  const { isAdmin: checkIsAdmin } = useContract();
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(false);
-  const [playerStats, setPlayerStats] = useState({
-    gamesPlayed: 0,
-    guessesPlayed: 0,
-    correctGuesses: 0,
-    totalWinnings: '0',
-    accuracy: 0,
-  });
+  const [showRules, setShowRules] = useState(false);
 
   // Use real user data from context
   const currentUser = user || {
@@ -54,10 +52,7 @@ export default function Home() {
   };
 
   const handleGameRules = () => {
-    // For now, just show an alert. Later this could be a modal or separate page
-    alert(
-      'Game Rules:\n\n1. You will see three words: top, middle (hidden), and bottom\n2. Guess the middle word that connects the top and bottom words\n3. You have 30 seconds to make your guess\n4. Pay the entry fee to play\n5. Win the prize pool if you guess correctly!'
-    );
+    setShowRules(true);
   };
 
   // Check if user is admin (dynamic check from contract)
@@ -83,62 +78,59 @@ export default function Home() {
     checkAdminStatus();
   }, [address, checkIsAdmin]);
 
-  // Fetch player stats from contract
-  useEffect(() => {
-    const fetchPlayerStats = async () => {
-      if (address) {
-        try {
-          const stats = await getPlayerStats();
-          if (stats) {
-            setPlayerStats({
-              gamesPlayed: stats.gamesPlayed,
-              guessesPlayed: stats.guessesPlayed,
-              correctGuesses: stats.correctGuesses,
-              totalWinnings: stats.totalWinnings,
-              accuracy: stats.accuracy,
-            });
-          }
-        } catch (error) {
-          console.error('❌ Error fetching player stats:', error);
-        }
-      }
-    };
-
-    fetchPlayerStats();
-  }, [address, getPlayerStats]);
-
   // Show login screen if user is not authenticated
   if (!user?.data && !isLoading) {
     return (
-      <div className='bg-white text-black flex min-h-screen flex-col items-center justify-center p-4'>
-        <div className='text-center space-y-4'>
-          <h1 className='text-4xl font-bold'>Guess What?</h1>
-          <p className='text-lg text-muted-foreground'>
-            You must first sign in!
-          </p>
-          <p className='text-lg text-muted-foreground'>
+      <div className='bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex min-h-screen flex-col items-center justify-center p-4'>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className='text-center space-y-6 bg-white/10 backdrop-blur-lg p-10 rounded-3xl shadow-2xl border border-white/20'
+        >
+          <motion.div
+            animate={{
+              scale: [1, 1.1, 1],
+              rotate: [0, 5, -5, 0],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              repeatDelay: 1,
+            }}
+            className='text-7xl mb-4'
+          >
+            🎯
+          </motion.div>
+          <h1 className='text-5xl font-bold text-white'>Guess What?</h1>
+          <p className='text-xl text-white/90'>🔐 Sign in to start playing!</p>
+          <p className='text-sm text-white/70'>
             {address
-              ? `Connected: ${address.substring(0, 6)}...${address.substring(
+              ? `🔗 ${address.substring(0, 6)}...${address.substring(
                   address.length - 4
                 )}`
-              : 'No wallet connected'}
+              : '⚠️ No wallet connected'}
           </p>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={signIn}
             disabled={isLoading}
-            className='px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center space-x-2 min-w-[160px] min-h-[48px]'
+            className='px-8 py-4 bg-white text-purple-600 font-bold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 min-w-[200px]'
           >
             {isLoading ? (
               <>
-                <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white' />
+                <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600' />
                 <span>Signing in...</span>
               </>
             ) : (
-              'Sign in'
+              <>
+                <span>✨ Sign In</span>
+              </>
             )}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     );
   }
@@ -146,129 +138,194 @@ export default function Home() {
   // Show loading screen while checking authentication
   if (isLoading) {
     return (
-      <div className='bg-white text-black flex min-h-screen flex-col items-center justify-center p-4'>
-        <div className='text-center space-y-4'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto' />
-          <p className='text-lg text-muted-foreground'>Loading...</p>
-        </div>
+      <div className='bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex min-h-screen flex-col items-center justify-center p-4'>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className='text-center space-y-4'
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            className='text-6xl'
+          >
+            🎮
+          </motion.div>
+          <p className='text-xl text-white font-semibold'>
+            Loading your game...
+          </p>
+        </motion.div>
       </div>
     );
   }
 
   // Show game interface for authenticated users
   return (
-    <div className='bg-white text-black min-h-screen'>
+    <div className='bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 min-h-screen flex flex-col'>
       {/* Header */}
-      <header className='bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4'>
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: 'spring', stiffness: 100 }}
+        className='bg-white/10 backdrop-blur-md text-white p-3 border-b border-white/20 flex-shrink-0'
+      >
         <div className='max-w-4xl mx-auto flex items-center justify-between'>
-          <div className='flex items-center space-x-3'>
-            <div className='w-10 h-10 bg-white/20 rounded-full flex items-center justify-center'>
-              <span className='text-xl font-bold'>G</span>
-            </div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className='flex items-center space-x-3'
+          >
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+              className='w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-2xl'
+            >
+              🎯
+            </motion.div>
             <h1 className='text-2xl font-bold'>Guess What?</h1>
-          </div>
-          <div className='flex items-center space-x-3'>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className='flex items-center space-x-3'
+          >
             {currentUser.isLoading ? (
-              <div className='w-8 h-8 bg-white/20 rounded-full animate-pulse' />
+              <div className='w-10 h-10 bg-white/20 rounded-full animate-pulse' />
             ) : (
-              <Image
-                src={currentUser.data?.pfp_url || '/images/icon.png'}
-                alt='Profile'
-                className='w-8 h-8 rounded-full'
-                width={32}
-                height={32}
-              />
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Image
+                  src={currentUser.data?.pfp_url || '/images/icon.png'}
+                  alt='Profile'
+                  className='w-10 h-10 rounded-full border-2 border-white/50'
+                  width={40}
+                  height={40}
+                />
+              </motion.div>
             )}
-            <span className='font-medium'>
+            <span className='font-semibold text-sm'>
               {currentUser.isLoading
                 ? 'Loading...'
                 : currentUser.data?.display_name || 'User'}
             </span>
-          </div>
+          </motion.div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Main Content */}
-      <main className='max-w-4xl mx-auto p-6'>
-        <div className='text-center mb-8'>
-          <h2 className='text-3xl font-bold text-gray-900 mb-4'>Guess What?</h2>
-          <p className='text-lg text-gray-600 mb-6'>
-            You are in the right place for becoming a genius!
+      <main className='flex-1 flex flex-col max-w-4xl mx-auto w-full p-4 overflow-y-auto'>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className='text-center mb-4'
+        >
+          <motion.div
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            className='text-5xl mb-2'
+          >
+            🧠
+          </motion.div>
+          <h2 className='text-3xl font-bold text-white mb-1'>Ready to Play?</h2>
+          <p className='text-sm text-white/70'>
+            💰 Check your stats below for winnings!
           </p>
-        </div>
+        </motion.div>
 
-        {/* Game Stats */}
-        <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-8'>
-          <div className='bg-blue-50 p-6 rounded-lg text-center'>
-            <div className='text-3xl font-bold text-blue-600 mb-2'>
-              {playerStats.gamesPlayed}
-            </div>
-            <div className='text-gray-600 text-sm'>Games Played</div>
-          </div>
-          <div className='bg-orange-50 p-6 rounded-lg text-center'>
-            <div className='text-3xl font-bold text-orange-600 mb-2'>
-              {playerStats.guessesPlayed}
-            </div>
-            <div className='text-gray-600 text-sm'>Total Guesses</div>
-          </div>
-          <div className='bg-green-50 p-6 rounded-lg text-center'>
-            <div className='text-3xl font-bold text-green-600 mb-2'>
-              {playerStats.correctGuesses}
-            </div>
-            <div className='text-gray-600 text-sm'>Games Won</div>
-          </div>
-          <div className='bg-purple-50 p-6 rounded-lg text-center'>
-            <div className='text-3xl font-bold text-purple-600 mb-2'>
-              {playerStats.accuracy.toFixed(1)}%
-            </div>
-            <div className='text-gray-600 text-sm'>Win Rate</div>
-          </div>
-        </div>
+        {/* Your Stats */}
+        <YourStats />
 
         {/* Game Actions */}
-        <div className='space-y-4'>
-          <button
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className='space-y-4'
+        >
+          <motion.button
+            whileHover={{ scale: 1.03, y: -3 }}
+            whileTap={{ scale: 0.92 }}
             onClick={goToGame}
-            className='w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105'
+            className='w-full bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white font-bold py-4 px-6 rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-200 text-lg flex items-center justify-center gap-3'
           >
-            Play Game
-          </button>
+            <motion.span
+              animate={{ rotate: [0, -10, 10, -10, 0] }}
+              transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
+              className='text-2xl'
+            >
+              🎯
+            </motion.span>
+            <span>Play Game</span>
+            <motion.span
+              animate={{ rotate: [0, 10, -10, 10, 0] }}
+              transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
+              className='text-2xl'
+            >
+              🎮
+            </motion.span>
+          </motion.button>
 
-          <div className='grid grid-cols-2 gap-4'>
-            <button
+          <div className='grid grid-cols-2 gap-3'>
+            <motion.button
+              whileHover={{ scale: 1.08, y: -3 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               onClick={goToLeaderboard}
-              className='bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors'
+              className='bg-white/95 backdrop-blur-sm text-gray-800 font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all border border-white/20 flex items-center justify-center gap-2'
             >
-              View Leaderboard
-            </button>
-            <button
+              <span className='text-xl'>🏅</span>
+              <span className='text-sm'>Leaderboard</span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.08, y: -3 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               onClick={handleGameRules}
-              className='bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors'
+              className='bg-white/95 backdrop-blur-sm text-gray-800 font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all border border-white/20 flex items-center justify-center gap-2'
             >
-              Game Rules
-            </button>
+              <span className='text-xl'>📖</span>
+              <span className='text-sm'>Rules</span>
+            </motion.button>
           </div>
 
           {/* Admin Link */}
           {checkingAdmin ? (
-            <div className='mt-4'>
-              <div className='w-full bg-gray-100 text-gray-500 font-medium py-3 px-4 rounded-lg text-center'>
-                <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500 mx-auto mb-2'></div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className='mt-4'
+            >
+              <div className='w-full bg-white/50 backdrop-blur-sm text-gray-700 font-medium py-3 px-4 rounded-xl text-center border border-white/20'>
+                <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-gray-700 mx-auto mb-2'></div>
                 Checking admin status...
               </div>
-            </div>
+            </motion.div>
           ) : isAdmin ? (
-            <div className='mt-4'>
-              <button
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 200 }}
+            >
+              <motion.button
+                whileHover={{ scale: 1.03, y: -3 }}
+                whileTap={{ scale: 0.92 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                 onClick={() => router.push('/admin')}
-                className='w-full bg-red-600 text-white font-medium py-3 px-4 rounded-lg hover:bg-red-700 transition-colors'
+                className='w-full bg-gradient-to-r from-red-500 to-pink-600 text-white font-bold py-3 px-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2'
               >
-                👑 Admin Panel
-              </button>
-            </div>
+                <span className='text-2xl'>👑</span>
+                <span>Admin Panel</span>
+              </motion.button>
+            </motion.div>
           ) : null}
-        </div>
+        </motion.div>
       </main>
+
+      {/* Game Rules Modal */}
+      <GameRules isOpen={showRules} onClose={() => setShowRules(false)} />
     </div>
   );
 }

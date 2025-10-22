@@ -1,149 +1,74 @@
 'use client';
 
-import { useContract } from '@/hooks/use-contract';
-import { useAccount } from 'wagmi';
-import { useState, useEffect } from 'react';
-
-interface LeaderboardEntry {
-  address: string;
-  gamesPlayed: number;
-  guessesPlayed: number;
-  correctGuesses: number;
-  totalWinnings: string;
-  accuracy: number;
-}
+import { motion } from 'framer-motion';
+import { ArrowLeft, Trophy } from 'lucide-react';
 
 export default function Leaderboard() {
-  const { address } = useAccount();
-  const { getPlayerStats } = useContract();
-  const [playerStats, setPlayerStats] = useState<LeaderboardEntry | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      if (address) {
-        try {
-          const stats = await getPlayerStats();
-          if (stats) {
-            setPlayerStats({
-              address,
-              gamesPlayed: stats.gamesPlayed,
-              guessesPlayed: stats.guessesPlayed,
-              correctGuesses: stats.correctGuesses,
-              totalWinnings: stats.totalWinnings,
-              accuracy: stats.accuracy,
-            });
-          }
-        } catch (error) {
-          console.error('Failed to fetch player stats:', error);
-        }
-      }
-      setIsLoading(false);
-    };
-
-    fetchStats();
-  }, [address, getPlayerStats]);
-
-  if (isLoading) {
-    return (
-      <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4'>
-        <div className='bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4'></div>
-          <div className='text-gray-600'>Loading leaderboard...</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 p-4'>
-      <div className='max-w-4xl mx-auto'>
-        {/* Header */}
-        <div className='bg-white rounded-t-2xl p-6 text-center'>
-          <h1 className='text-3xl font-bold text-gray-900 mb-2'>Leaderboard</h1>
-          <p className='text-gray-600'>Top players and your stats</p>
-        </div>
-
-        {/* Your Stats */}
-        {playerStats && (
-          <div className='bg-white p-6 border-b'>
-            <h2 className='text-xl font-semibold text-gray-900 mb-4'>
-              Your Stats
-            </h2>
-            <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
-              <div className='bg-blue-50 p-4 rounded-lg text-center'>
-                <div className='text-2xl font-bold text-blue-600'>
-                  {playerStats.gamesPlayed}
-                </div>
-                <div className='text-sm text-gray-600'>Games Played</div>
-              </div>
-              <div className='bg-orange-50 p-4 rounded-lg text-center'>
-                <div className='text-2xl font-bold text-orange-600'>
-                  {playerStats.guessesPlayed}
-                </div>
-                <div className='text-sm text-gray-600'>Total Guesses</div>
-              </div>
-              <div className='bg-green-50 p-4 rounded-lg text-center'>
-                <div className='text-2xl font-bold text-green-600'>
-                  {playerStats.correctGuesses}
-                </div>
-                <div className='text-sm text-gray-600'>Games Won</div>
-              </div>
-              <div className='bg-purple-50 p-4 rounded-lg text-center'>
-                <div className='text-2xl font-bold text-purple-600'>
-                  {playerStats.accuracy.toFixed(1)}%
-                </div>
-                <div className='text-sm text-gray-600'>Win Rate</div>
-              </div>
-              <div className='bg-yellow-50 p-4 rounded-lg text-center'>
-                <div className='text-2xl font-bold text-yellow-600'>
-                  {parseFloat(playerStats.totalWinnings).toFixed(6)}
-                </div>
-                <div className='text-sm text-gray-600'>ETH Won</div>
-              </div>
-              <div className='bg-pink-50 p-4 rounded-lg text-center'>
-                <div className='text-2xl font-bold text-pink-600'>
-                  {playerStats.gamesPlayed > 0
-                    ? (
-                        playerStats.guessesPlayed / playerStats.gamesPlayed
-                      ).toFixed(1)
-                    : '0'}
-                </div>
-                <div className='text-sm text-gray-600'>Avg Guesses/Game</div>
-              </div>
-            </div>
+    <div className='min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex flex-col p-3'>
+      <div className='max-w-4xl mx-auto w-full flex-1 flex flex-col'>
+        {/* Leaderboard Title */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className='bg-white/95 backdrop-blur-sm rounded-2xl p-3 text-center mb-2 shadow-xl border border-white/20 flex-shrink-0'
+        >
+          <div className='flex items-center justify-center gap-2'>
+            <Trophy className='w-8 h-8 text-yellow-500' />
+            <h1 className='text-2xl font-bold text-gray-900'>Leaderboard</h1>
           </div>
-        )}
+        </motion.div>
 
-        {/* Top Players Coming Soon */}
-        <div className='bg-white p-6'>
-          <h2 className='text-xl font-semibold text-gray-900 mb-4'>
-            Top Players
-          </h2>
-          <div className='bg-blue-50 p-8 rounded-lg text-center'>
-            <div className='text-4xl mb-3'>🏆</div>
-            <div className='text-lg font-semibold text-blue-900 mb-2'>
+        {/* Leaderboard Content */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className='bg-white/95 backdrop-blur-sm rounded-2xl p-4 mb-2 shadow-xl border border-white/20 flex-1 flex flex-col justify-center min-h-0'
+        >
+          {/* Coming Soon Content */}
+          <div className='bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-xl text-center border border-blue-200'>
+            <motion.div
+              animate={{
+                scale: [1, 1.15, 1],
+                rotate: [0, 360],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              className='text-4xl mb-2'
+            >
+              🚀
+            </motion.div>
+            <div className='text-base font-bold text-gray-900 mb-1'>
               Coming Soon!
             </div>
-            <div className='text-sm text-blue-700'>
-              Global leaderboard will be available soon. Keep playing to climb
-              the ranks!
+            <div className='text-xs text-gray-600'>
+              Global leaderboard launching soon 📈
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Footer */}
-        <div className='bg-white rounded-b-2xl p-6 text-center'>
-          <div className='text-sm text-gray-600 mb-4'>
-            Leaderboard updates in real-time as players win games
-          </div>
-          <button
+        {/* Go Back Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className='flex-shrink-0'
+        >
+          <motion.button
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.92 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
             onClick={() => window.history.back()}
-            className='w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200'
+            className='w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 px-6 rounded-xl shadow-2xl hover:shadow-3xl transition-all duration-200 flex items-center justify-center gap-3 border-2 border-white/20'
           >
-            ← Go Back
-          </button>
-        </div>
+            <ArrowLeft className='w-5 h-5' />
+            <span>Go Back</span>
+          </motion.button>
+        </motion.div>
       </div>
     </div>
   );
