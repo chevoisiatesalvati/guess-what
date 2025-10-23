@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { useContract } from '@/hooks/use-contract';
 import { useEffect, useState } from 'react';
+import ShareButton from '@/components/ShareButton';
 
 interface PlayerStats {
   gamesPlayed: number;
@@ -151,6 +152,22 @@ export default function YourStats() {
           <div className='text-xs text-gray-600 font-medium'>Avg/Game</div>
         </motion.div>
       </div>
+
+      {/* Share Achievement Button */}
+      {playerStats.correctGuesses > 0 && (
+        <div className='mt-3'>
+          <ShareButton
+            data={{
+              type: 'achievement',
+              accuracy: playerStats.accuracy,
+              gamesPlayed: playerStats.gamesPlayed,
+              totalWinnings: playerStats.totalWinnings,
+              achievement: `${playerStats.correctGuesses} wins`,
+            }}
+            variant='small'
+          />
+        </div>
+      )}
     </motion.div>
   );
 }

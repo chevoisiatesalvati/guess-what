@@ -4,7 +4,7 @@ import { useContract } from '@/hooks/use-contract';
 import { useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import WinModal from '@/components/WinModal';
 
 export default function Game() {
   const router = useRouter();
@@ -27,6 +27,8 @@ export default function Game() {
   const [guess, setGuess] = useState('');
   const [letterInputs, setLetterInputs] = useState<string[]>([]);
   const [isSubmittingGuess, setIsSubmittingGuess] = useState(false);
+  const [showWinModal, setShowWinModal] = useState(false);
+  const [winPrize, setWinPrize] = useState<string>('');
 
   // Load a random active game on component mount
   useEffect(() => {
@@ -171,16 +173,12 @@ export default function Game() {
         const platformFee = parseFloat(updatedGameInfo.totalPrize) * 0.05;
         const winnerPrize =
           parseFloat(updatedGameInfo.totalPrize) - platformFee;
-        toast.success(`🎉 Correct! You won ${winnerPrize.toFixed(4)} ETH!`, {
-          duration: 5000,
-        });
+
+        setWinPrize(winnerPrize.toFixed(4));
+        setShowWinModal(true);
         setGameData(updatedGameInfo);
-        setTimeout(() => {
-          router.push('/');
-        }, 5000);
       } else {
         // Incorrect guess
-        toast.error('Incorrect guess. Try again!');
         setGameData(updatedGameInfo);
 
         // Reset letter inputs
@@ -199,7 +197,6 @@ export default function Game() {
       }
     } catch (error: any) {
       console.error('❌ Failed to submit guess:', error);
-      toast.error(error.message || 'Failed to submit guess');
     } finally {
       setIsSubmittingGuess(false);
     }
@@ -369,6 +366,23 @@ export default function Game() {
           </div>
         </div>
       </div>
+
+      {/* Win Modal */}
+      <WinModal
+        isOpen={showWinModal}
+        onClose={() => setShowWinModal(false)}
+        onNewGame={() => {
+          setShowWinModal(false);
+          // Reload the game by triggering the useEffect
+          window.location.reload();
+        }}
+        onGoHome={() => {
+          setShowWinModal(false);
+          router.push('/');
+        }}
+        gameId={gameId || 0}
+        prize={winPrize}
+      />
     </div>
   );
 }
