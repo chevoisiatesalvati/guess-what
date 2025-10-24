@@ -4,6 +4,8 @@ import { useContract } from '@/hooks/use-contract';
 import { useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { RotateCcw, Home } from 'lucide-react';
 import WinModal from '@/components/WinModal';
 
 export default function Game() {
@@ -147,6 +149,28 @@ export default function Game() {
     }
   };
 
+  const handleRerollGame = async () => {
+    try {
+      setIsLoadingGame(true);
+      const randomGameId = await getRandomActiveGame();
+      console.log(`🎲 Rerolled to game ID: ${randomGameId}`);
+
+      if (randomGameId) {
+        setGameId(randomGameId);
+        const gameInfo = await getGameInfo(randomGameId);
+        setGameData(gameInfo);
+        toast.success('🎲 New game loaded!');
+      } else {
+        toast.error('No active games available');
+      }
+    } catch (error: any) {
+      console.error('❌ Failed to reroll game:', error);
+      toast.error('Failed to load new game');
+    } finally {
+      setIsLoadingGame(false);
+    }
+  };
+
   const handleGuessSubmit = async () => {
     const currentGuess = letterInputs.join('');
     if (!currentGuess.trim() || !gameId) {
@@ -180,6 +204,11 @@ export default function Game() {
       } else {
         // Incorrect guess
         setGameData(updatedGameInfo);
+
+        // Show feedback to user
+        toast.error('❌ Wrong guess! Try again!', {
+          duration: 3000,
+        });
 
         // Reset letter inputs
         setLetterInputs(new Array(gameData.middleWordLength).fill(''));
@@ -274,7 +303,28 @@ export default function Game() {
       <div className='max-w-md mx-auto w-full pt-4'>
         {/* Header with Prize */}
         <div className='bg-white rounded-t-2xl p-3 text-center'>
-          <div className='text-xs text-gray-500 mb-1'>Game #{gameId}</div>
+          {/* Game ID with Action Buttons */}
+          <div className='flex items-center justify-between mb-1'>
+            <div className='text-xs text-gray-500'>Game #{gameId}</div>
+            <div className='flex gap-2'>
+              <button
+                onClick={handleRerollGame}
+                disabled={isLoadingGame}
+                className='p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                title='Get new random game'
+              >
+                <RotateCcw className='w-4 h-4 text-gray-600' />
+              </button>
+              <button
+                onClick={() => router.push('/')}
+                className='p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors'
+                title='Go to Home'
+              >
+                <Home className='w-4 h-4 text-gray-600' />
+              </button>
+            </div>
+          </div>
+
           <div className='bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg'>
             <div className='text-xs'>Prize Pool</div>
             <div className='text-xl'>

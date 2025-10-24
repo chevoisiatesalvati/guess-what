@@ -19,7 +19,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           <GameProvider>
             {children}
             <Toaster
-              position='top-center'
+              position='bottom-center'
               expand={false}
               closeButton={false}
               toastOptions={{
