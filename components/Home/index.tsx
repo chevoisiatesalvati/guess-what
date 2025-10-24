@@ -103,7 +103,9 @@ export default function Home() {
             🎯
           </motion.div>
           <h1 className='text-5xl font-bold text-white'>Guess What?</h1>
-          <p className='text-xl text-white/90'>🔐 Sign in to start playing!</p>
+          <p className='text-xl text-white/90'>
+            🔐 You must Sign in to start playing!
+          </p>
           <p className='text-sm text-white/70'>
             {address
               ? `🔗 ${address.substring(0, 6)}...${address.substring(
@@ -117,7 +119,7 @@ export default function Home() {
             whileTap={{ scale: 0.95 }}
             onClick={signIn}
             disabled={isLoading}
-            className='px-8 py-4 bg-white text-purple-600 font-bold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 min-w-[200px]'
+            className='px-8 py-4 bg-white text-purple-600 font-bold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 min-w-[200px] mx-auto'
           >
             {isLoading ? (
               <>
@@ -126,7 +128,7 @@ export default function Home() {
               </>
             ) : (
               <>
-                <span>✨ Sign In</span>
+                <span>Sign In</span>
               </>
             )}
           </motion.button>
