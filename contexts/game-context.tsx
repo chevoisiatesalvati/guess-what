@@ -1,12 +1,8 @@
 'use client';
 
 import { GameState, GameResult, PlayerStats } from '@/lib/game-types';
-import {
-  createNewGame,
-  validateGuess,
-  getTimeRemaining,
-  isGameExpired,
-} from '@/lib/game-utils';
+import { createNewGame, getTimeRemaining } from '@/lib/game-utils';
+import { validateGuess } from '@/lib/utils';
 import {
   createContext,
   ReactNode,

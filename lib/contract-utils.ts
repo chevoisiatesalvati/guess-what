@@ -3,8 +3,6 @@ import {
   parseEther,
   formatEther,
   decodeEventLog,
-  keccak256,
-  toBytes,
   type Address,
 } from 'viem';
 import { getWalletClient } from 'wagmi/actions';
@@ -16,13 +14,7 @@ import {
   getCurrentChainName,
   getCurrentTransport,
 } from '@/lib/network-config';
-
-// Helper function to hash words for game creation
-export function hashWord(word: string): `0x${string}` {
-  // Normalize the word: lowercase and trim
-  const normalized = word.toLowerCase().trim();
-  return keccak256(toBytes(normalized));
-}
+import { hashWord } from './utils';
 
 export interface ContractConfig {
   address: string;

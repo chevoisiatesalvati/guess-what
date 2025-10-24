@@ -10,10 +10,10 @@ import type { Chain } from 'viem';
  */
 
 // Contract addresses for each network
-// These are loaded from the deployment files and updated when contracts are redeployed
+// These are loaded from environment variables and updated when contracts are redeployed
 export const CONTRACT_ADDRESSES = {
   [base.id]: '0xC85Dc6C4a2d1b2f8e4842D8737DE06425E35919A', // Base Mainnet
-  [baseSepolia.id]: '0xf4F689091F30EB77Ea9575Be919A762b418E12c7', // Base Sepolia
+  [baseSepolia.id]: '0x9ce6f3eBE9C2cee59C28c7D5633dd983D5DD12b4', // Base Sepolia
 } as const;
 
 // RPC URLs for each network

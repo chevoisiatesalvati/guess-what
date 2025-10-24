@@ -33,6 +33,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     // State variables
     uint256 public nextGameId = 1;
     uint256 public platformFeePercent = 5; // 5% default platform fee
+    uint256 public sustainableFeePercent = 5; // 5% default sustainable fee
     uint256 public treasuryBalance;
     uint256 public defaultPrizeMultiplier = 10; // Base prize = entry fee * multiplier
     
@@ -57,6 +58,7 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
     event TreasuryWithdrawn(address indexed recipient, uint256 amount);
     event PrizeMultiplierUpdated(uint256 oldMultiplier, uint256 newMultiplier);
     event PlatformFeeUpdated(uint256 oldFee, uint256 newFee);
+    event SustainableFeeUpdated(uint256 oldFee, uint256 newFee);
 
     // Constructor
     constructor(address initialOwner, address[] memory initialAdmins) Ownable(initialOwner) {
@@ -181,11 +183,19 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         
         // Calculate platform fee from total
         uint256 platformFee = (totalPrizeAmount * platformFeePercent) / 100;
-        uint256 winnerPrize = totalPrizeAmount - platformFee;
+        
+        // Calculate sustainable fee (goes to treasury to make game self-sustainable)
+        // This fee is a percentage of the total prize that stays in the contract
+        uint256 sustainableFee = (totalPrizeAmount * sustainableFeePercent) / 100;
+        
+        uint256 winnerPrize = totalPrizeAmount - platformFee - sustainableFee;
         
         // Deduct base prize from treasury
         require(treasuryBalance >= game.basePrizeAmount, "Insufficient treasury");
         treasuryBalance -= game.basePrizeAmount;
+        
+        // Add sustainable fee to treasury (makes the game self-sustainable)
+        treasuryBalance += sustainableFee;
         
         // Update player stats
         PlayerStats storage stats = playerStats[_winner];
@@ -376,6 +386,13 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         emit PlatformFeeUpdated(oldFee, _feePercent);
     }
     
+    function setSustainableFee(uint256 _feePercent) external onlyOwner {
+        require(_feePercent <= 10, "Sustainable fee cannot exceed 10%");
+        uint256 oldFee = sustainableFeePercent;
+        sustainableFeePercent = _feePercent;
+        emit SustainableFeeUpdated(oldFee, _feePercent);
+    }
+    
     function getTreasuryBalance() external view returns (uint256) {
         return treasuryBalance;
     }
@@ -408,5 +425,33 @@ contract GuessWhatGame is ReentrancyGuard, Ownable {
         }
         
         emit GameExpired(_gameId, accumulatedPrize);
+    }
+
+    // Emergency function to close all active games at once
+    function emergencyCloseAllGames() external onlyAdmin nonReentrant {
+        uint256 totalReturned = 0;
+        uint256 gamesClosed = 0;
+        
+        for (uint256 i = 1; i < nextGameId; i++) {
+            Game storage game = games[i];
+            if (game.isActive && !game.isCompleted) {
+                uint256 accumulatedPrize = game.totalPrize;
+                
+                game.isActive = false;
+                game.isCompleted = true;
+                game.totalPrize = 0; // Prevent re-entrancy
+                
+                // Return accumulated prizes to treasury
+                if (accumulatedPrize > 0) {
+                    treasuryBalance += accumulatedPrize;
+                    totalReturned += accumulatedPrize;
+                }
+                
+                gamesClosed++;
+                emit GameExpired(i, accumulatedPrize);
+            }
+        }
+        
+        require(gamesClosed > 0, "No active games to close");
     }
 }

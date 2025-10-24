@@ -81,10 +81,6 @@ export function createWordHint(word: string): string {
   return `${firstLetter}${dots}${lastLetter}`;
 }
 
-export function validateGuess(guess: string, correctWord: string): boolean {
-  return guess.toLowerCase().trim() === correctWord.toLowerCase().trim();
-}
-
 export function calculateTimeBonus(
   timeElapsed: number,
   timeLimit: number

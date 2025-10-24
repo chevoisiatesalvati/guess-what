@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useContract } from '@/hooks/use-contract';
-import { hashWord } from '@/lib/contract-utils';
+import { hashWord } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function AdminPage() {

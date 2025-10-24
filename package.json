@@ -15,7 +15,8 @@
     "deploy:base": "npm run compile && hardhat ignition deploy ignition/modules/GuessWhatGame.ts --network base && npm run update-addresses",
     "verify:base-sepolia": "npx jiti scripts/verify-contract.ts baseSepolia",
     "verify:base": "npx jiti scripts/verify-contract.ts base",
-    "update-addresses": "node scripts/update-contract-addresses.js"
+    "update-addresses": "node scripts/update-contract-addresses.js",
+    "create-games": "npx tsx scripts/create-games-standalone.ts 10"
   },
   "dependencies": {
     "@farcaster/auth-client": "^0.7.0",
