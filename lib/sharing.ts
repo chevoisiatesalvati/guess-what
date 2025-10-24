@@ -16,7 +16,7 @@ export function generateShareText(data: ShareData): string {
 
   switch (data.type) {
     case 'game_win':
-      return `🎉 Guess What?! I just won ${data.prize} ETH in this game! Craaazy! Play now: ${appUrl}`;
+      return `🎉 Guess What?! I just won ${data.prize} ETH in this game! Craaazy! Play with me here: ${appUrl}`;
 
     case 'achievement':
       return `🏆 Unlocked "${

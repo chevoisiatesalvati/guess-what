@@ -142,7 +142,7 @@ export async function GET(request: Request) {
                 marginTop: '20px',
               }}
             >
-              Can you beat this score? Play now!
+              Can you beat this score?
             </div>
           </div>
 
