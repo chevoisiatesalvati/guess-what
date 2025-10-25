@@ -85,7 +85,7 @@ export default function WinModal({
                   className='w-full flex items-center justify-center gap-2'
                 >
                   <Share className='w-5 h-5' />
-                  Share Win on Warpcast
+                  Share Win on Farcaster
                 </ShareButton>
               </motion.div>
 

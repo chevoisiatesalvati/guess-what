@@ -99,6 +99,6 @@ export function createShareButton(
   return {
     onClick: () => shareToWarpcast(data),
     className,
-    children: '🎉 Share to Warpcast',
+    children: '🎉 Share to Farcaster',
   };
 }

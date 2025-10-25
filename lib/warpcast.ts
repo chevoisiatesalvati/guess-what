@@ -1,7 +1,7 @@
 import { env } from '@/lib/env';
 
 /**
- * Get the farcaster manifest for the frame, generate yours from Warpcast Mobile
+ * Get the farcaster manifest for the frame, generate yours from Farcaster Mobile
  *  On your phone to Settings > Developer > Domains > insert website hostname > Generate domain manifest
  * @returns The farcaster manifest for the frame
  */

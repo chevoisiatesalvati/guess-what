@@ -45,7 +45,7 @@ export default function ShareButton({
       onClick={handleShare}
       className={`${getVariantStyles()} ${className}`}
     >
-      {children || '🎉 Share to Warpcast'}
+      {children || '🎉 Share to Farcaster'}
     </motion.button>
   );
 }

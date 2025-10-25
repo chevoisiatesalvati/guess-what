@@ -23,7 +23,7 @@ When developing this Farcaster mini-app, always follow these viral growth princi
 
 ## 📤 Shareability & Virality
 
-- Add "Share to Warpcast" buttons at key moments (game scores, achievements, leaderboard positions)
+- Add "Share to Farcaster" buttons at key moments (game scores, achievements, leaderboard positions)
 - Auto-compose cast text with fun copy + a link to your mini-app
 - Avoid auto-tagging users in prefilled text – it might feel spammy
 - Embed the mini-app URL in the cast
@@ -67,7 +67,7 @@ When developing this Farcaster mini-app, always follow these viral growth princi
 
 - Add referral or pre-save system before going live
 - Reward early signups with perks, badges, or access
-- Use Warpcast notifications to bring pre-savers back when app is live
+- Use Farcaster notifications to bring pre-savers back when app is live
 - Launch with challenges or leaderboards to fuel early engagement
 
 ## 🎨 Technical Implementation
@@ -108,7 +108,7 @@ When developing this Farcaster mini-app, always follow these viral growth princi
 
 ## 📤 Shareability & Virality
 
-- Add "Share to Warpcast" buttons at key moments (game scores, achievements, leaderboard positions)
+- Add "Share to Farcaster" buttons at key moments (game scores, achievements, leaderboard positions)
 - Auto-compose cast text with fun copy + a link to your mini-app
 - Avoid auto-tagging users in prefilled text – it might feel spammy
 - Embed the mini-app URL in the cast
@@ -152,7 +152,7 @@ When developing this Farcaster mini-app, always follow these viral growth princi
 
 - Add referral or pre-save system before going live
 - Reward early signups with perks, badges, or access
-- Use Warpcast notifications to bring pre-savers back when app is live
+- Use Farcaster notifications to bring pre-savers back when app is live
 - Launch with challenges or leaderboards to fuel early engagement
 
 ## 🎨 Technical Implementation
